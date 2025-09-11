@@ -53,6 +53,9 @@ A4_CSS_TEMPLATE = """.a4 {{
     background: white;
     box-sizing: border-box;
     margin: 10px auto;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
 }}
 html, body {{
     height: 100%;
@@ -81,6 +84,8 @@ h2 {{
 p {{
     margin: 6px 0 12px 0;
     line-height: 1.6;
+    font-size: 16px;
+    font-family: Helvetica, Arial, sans-serif;
 }}
 .card {{
     background: {theme_color}1a;
@@ -241,14 +246,23 @@ def index():
 
 def extract_theme(text: str) -> str:
     text_lower = text.lower()
-    if any(word in text_lower for word in ["bank", "finance", "tax", "loan"]):
+    
+    # Finance keywords
+    if any(word in text_lower for word in ["bank", "finance", "financial", "tax", "loan", "investment", "money", "revenue", "profit", "budget", "cost", "expense", "payment", "accounting", "economic"]):
         return "finance"
-    if any(word in text_lower for word in ["oracle", "tech", "software", "erp"]):
-        return "tech"
-    if any(word in text_lower for word in ["health", "medical", "hospital"]):
+    
+    # Health keywords (expanded)
+    if any(word in text_lower for word in ["health", "medical", "hospital", "doctor", "patient", "treatment", "medicine", "healthcare", "cancer", "disease", "therapy", "clinical", "pharmaceutical", "diagnosis", "wellness", "surgery"]):
         return "health"
-    if any(word in text_lower for word in ["car", "vehicle", "auto"]):
+    
+    # Technology keywords
+    if any(word in text_lower for word in ["tech", "technology", "software", "digital", "ai", "artificial intelligence", "computer", "data", "algorithm", "programming", "app", "system", "platform", "cloud", "iphone", "android", "internet", "web"]):
+        return "tech"
+    
+    # Automotive keywords
+    if any(word in text_lower for word in ["car", "vehicle", "auto", "automotive", "transport", "driving", "engine", "fuel", "electric vehicle", "tesla", "ford", "toyota"]):
         return "auto"
+    
     return "default"
 
 def calculate_cost(model_name, prompt_tokens, completion_tokens):
@@ -271,30 +285,85 @@ def calculate_cost(model_name, prompt_tokens, completion_tokens):
 def process():
     data = request.json
     input_text = data.get("text", "").strip()
+    ai_topic = data.get("aiTopic", "").strip()
     selected_model = data.get("model", "GPT-5")
+    verbosity = data.get("verbosity", "Detailed")
     
-    if not input_text:
-        return jsonify({"error": "No input text provided."})
-
-    theme = extract_theme(input_text)
+    if not input_text and not ai_topic:
+        return jsonify({"error": "No input text or AI topic provided."})
+    
+    # Determine processing mode
+    is_ai_research = bool(ai_topic and not input_text)
+    processing_text = ai_topic if is_ai_research else input_text
+    
+    theme = extract_theme(processing_text)
     theme_color = THEME_COLORS.get(theme, THEME_COLORS["default"])
     
+    print(f"DEBUG: Processing mode: {'AI Research' if is_ai_research else 'Document Processing'}")
     print(f"DEBUG: Detected theme: {theme}, color: {theme_color}")
-    print(f"DEBUG: Selected model: {selected_model}")
+    print(f"DEBUG: Selected model: {selected_model}, Verbosity: {verbosity}")
 
-    # Extract key topics for web search
-    search_query = f"latest insights {' '.join(input_text.split()[:10])}"
-    search_results = web_search(search_query, num_results=2)
-    print(f"DEBUG: Found {len(search_results)} web search results")
+    # Handle AI Research vs Document Processing
+    if is_ai_research:
+        # For AI research mode, do extensive web search
+        search_query = ai_topic
+        search_results = web_search(search_query, num_results=5)
+        print(f"DEBUG: AI Research - Found {len(search_results)} web search results")
+        
+        # Create research context
+        search_context = f"\n\nWeb Research Results for '{ai_topic}':\n"
+        if search_results:
+            for i, result in enumerate(search_results, 1):
+                search_context += f"{i}. {result['title']}: {result['snippet']}\n"
+        else:
+            search_context += "No specific web results found. Use general knowledge.\n"
+            
+        # Use the topic as the base text for processing
+        processing_content = f"Research Topic: {ai_topic}{search_context}"
+    else:
+        # Standard document processing with light web search
+        search_query = f"latest insights {' '.join(input_text.split()[:10])}"
+        search_results = web_search(search_query, num_results=2)
+        print(f"DEBUG: Document Processing - Found {len(search_results)} web search results")
+        
+        search_context = ""
+        if search_results:
+            search_context = f"\n\nAdditional Context from Web Search:\n"
+            for i, result in enumerate(search_results, 1):
+                search_context += f"{i}. {result['title']}: {result['snippet']}\n"
+        
+        processing_content = f"{input_text}{search_context}"
+
+    # Create verbosity-specific instructions
+    verbosity_instructions = {
+        "Concise": "Keep content brief and focused. Use 1-2 paragraphs per section, 2-3 stat boxes, and 1 small table. Prioritize key information only.",
+        "Detailed": "Provide balanced detail. Use 2-3 paragraphs per section, 3 stat boxes, and 1-2 comprehensive tables. Include supporting analysis.",
+        "Comprehensive": "Provide EXTENSIVE analysis with maximum detail. REQUIREMENTS: 4-6 paragraphs per section, 6+ stat boxes, 3-4 detailed tables, timeline tables, comparison tables, market analysis, trend data, future projections, case studies, and deep contextual insights. Make the document comprehensive like a research report."
+    }
     
-    # Combine original text with search insights
-    search_context = ""
-    if search_results:
-        search_context = f"\n\nAdditional Context from Web Search:\n"
-        for i, result in enumerate(search_results, 1):
-            search_context += f"{i}. {result['title']}: {result['snippet']}\n"
+    # Determine content type instructions
+    if is_ai_research:
+        content_instruction = f"""
+RESEARCH MODE: You are researching and creating a comprehensive document about: "{ai_topic}"
+
+Use the web search results provided and your knowledge to create an authoritative, well-researched document. 
+Focus on current trends, statistics, and factual information. Create original content based on research.
+
+Verbosity Level: {verbosity} - {verbosity_instructions[verbosity]}
+"""
+    else:
+        content_instruction = f"""
+DOCUMENT PROCESSING MODE: Structure and enhance the provided text content.
+
+Use the original text as the foundation and enhance it with proper formatting and organization.
+Add relevant context from web search results where applicable.
+
+Verbosity Level: {verbosity} - {verbosity_instructions[verbosity]}
+"""
 
     prompt = f"""
+{content_instruction}
+
 Create a professional document following this EXACT structure (like a medical/scientific paper):
 
 <h1>Descriptive Title</h1>
@@ -369,6 +438,16 @@ MANDATORY TABLE REQUIREMENTS:
   • Timeline events → timeline table
 - Even simple bullet points MUST become tables with headers like "Item", "Description", "Details"
 
+COMPREHENSIVE VERBOSITY EXTRA REQUIREMENTS:
+{f"- CREATE MULTIPLE SECTIONS (6+ sections minimum) with extensive analysis" if verbosity == "Comprehensive" else ""}
+{f"- ADD TIMELINE TABLE with dates/milestones" if verbosity == "Comprehensive" else ""}
+{f"- CREATE COMPARISON TABLES (before/after, competitor analysis, etc.)" if verbosity == "Comprehensive" else ""}
+{f"- INCLUDE MARKET ANALYSIS section with industry data" if verbosity == "Comprehensive" else ""}
+{f"- ADD FUTURE PROJECTIONS/TRENDS section" if verbosity == "Comprehensive" else ""}
+{f"- CREATE DETAILED STATISTICAL BREAKDOWN with 6+ stat boxes" if verbosity == "Comprehensive" else ""}
+{f"- INCLUDE CASE STUDIES or EXAMPLES section" if verbosity == "Comprehensive" else ""}
+{f"- ADD RISK ANALYSIS or IMPACT ASSESSMENT table" if verbosity == "Comprehensive" else ""}
+
 CRITICAL RULES:
 - NO nested cards or divs inside cards
 - Use EXACT stat structure with .big and .sub classes
@@ -377,8 +456,8 @@ CRITICAL RULES:
 - CREATE TABLES FROM EVERYTHING POSSIBLE
 - Return ONLY HTML (no explanations, no backticks)
 
-Text to analyze:
-{input_text}{search_context}
+Content to process:
+{processing_content}
     """
 
     try:
@@ -391,13 +470,34 @@ Text to analyze:
         
         actual_model = model_map.get(selected_model, "gpt-4o")
         
-        response = openai.chat.completions.create(
-            model=actual_model,
-            messages=[
-                {"role": "system", "content": "You are an expert document analyst and professional HTML formatter. Create highly structured, intelligent documents with deep analysis."},
-                {"role": "user", "content": prompt}
-            ]
-        )
+        # Retry logic for connection errors
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                # Set max tokens based on verbosity
+                max_tokens = {
+                    "Concise": 1500,
+                    "Detailed": 3000, 
+                    "Comprehensive": 4000  # Much higher for comprehensive documents
+                }.get(verbosity, 3000)
+                
+                response = openai.chat.completions.create(
+                    model=actual_model,
+                    messages=[
+                        {"role": "system", "content": "You are an expert document analyst and professional HTML formatter. Create highly structured, intelligent documents with deep analysis."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=max_tokens,
+                    timeout=30  # 30 second timeout
+                )
+                break  # Success, exit retry loop
+            except Exception as e:
+                print(f"DEBUG: Attempt {attempt + 1} failed: {str(e)}")
+                if attempt == max_retries - 1:  # Last attempt
+                    raise e
+                else:
+                    import time
+                    time.sleep(2)  # Wait 2 seconds before retry
 
         ai_html = response.choices[0].message.content
         

@@ -1,0 +1,24 @@
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Claude settings
+.claude/
+
+# Generated documents
+structured_document*.html
+diet.html
+letter.html
+
+# Images and assets
+*.png
+*.jpg
+*.jpeg
+
+# Development files
+prd.txt
+test_*.py

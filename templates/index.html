@@ -155,6 +155,10 @@ body {
     font-size: 16px;
     font-weight: 500;
     margin-bottom: 10px;
+    line-height: 1;
+}
+.tolerance-label span {
+    font-weight: 700;
 }
 .tolerance-desc {
     color: #666;
@@ -263,7 +267,6 @@ textarea {
     border-radius: 8px; 
     background: #fff; 
     overflow: auto; 
-    font-size: 14px; 
     line-height: 1.6;
 }
 #output pre { color: #d32f2f; }
@@ -318,7 +321,22 @@ textarea {
       <h1>Universal Document Structurer</h1>
       <div class="subtitle">Transform any text content into perfectly structured A4 documents</div>
 
-      <div class="method-section">
+      <!-- Method Selection -->
+      <div style="margin-bottom: 20px; text-align: center;">
+        <div style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">Choose Processing Method:</div>
+        <div style="display: flex; justify-content: center; gap: 30px;">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="radio" name="processing-method" id="method-document" value="document" checked style="transform: scale(1.2);">
+            <span style="font-weight: 500;">📄 Process Document</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="radio" name="processing-method" id="method-research" value="research" style="transform: scale(1.2);">
+            <span style="font-weight: 500;">🔍 AI Research</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="method-section" id="document-method">
         <div class="method-title"><strong>Method 1:</strong> Upload or Paste Document</div>
         <div class="file-upload">
           <input type="file" id="file-input" accept=".txt,.pdf,.doc,.docx" style="display: none;">
@@ -327,6 +345,15 @@ textarea {
           </button>
         </div>
         <textarea id="input-text" placeholder="Upload a file above or paste your document text here..."></textarea>
+      </div>
+
+      <div class="method-section" id="research-method" style="border: 2px dashed #007acc; display: none;">
+        <div class="method-title"><strong>Method 2:</strong> AI Research & Generate Document</div>
+        <div class="section-desc">Let AI research and create a document on any topic (max 20 words)</div>
+        <textarea id="ai-topic" placeholder="Enter your research topic here... (e.g., 'Latest developments in renewable energy technology 2024')" maxlength="200" style="min-height: 80px; font-style: italic;" disabled></textarea>
+        <div class="word-counter" style="font-size: 12px; color: #666; text-align: right; margin-top: 5px;">
+          <span id="word-count">0</span>/20 words
+        </div>
       </div>
 
       <div class="controls-section">
@@ -343,6 +370,23 @@ textarea {
               <span>GPT-4o-mini</span>
               <span>Gemini Pro 2.5</span>
               <span>GPT-5</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tolerance-control">
+          <div class="tolerance-label">
+            📝 Output Verbosity: <span id="verbosity-display">Detailed</span>
+          </div>
+          <div class="tolerance-desc">
+            Control document length: Concise (brief), Detailed (standard), or Comprehensive (extensive).
+          </div>
+          <div class="slider-container">
+            <input type="range" min="0" max="2" value="1" class="slider" id="verbosity-slider" step="1">
+            <div class="slider-labels">
+              <span>Concise</span>
+              <span>Detailed</span>
+              <span>Comprehensive</span>
             </div>
           </div>
         </div>
@@ -392,6 +436,70 @@ modelSlider.addEventListener("input", (e) => {
     modelDisplay.textContent = models[value];
 });
 
+// Verbosity selection
+const verbositySlider = document.getElementById("verbosity-slider");
+const verbosityDisplay = document.getElementById("verbosity-display");
+const verbosityLevels = ["Concise", "Detailed", "Comprehensive"];
+
+verbositySlider.addEventListener("input", (e) => {
+    const value = parseInt(e.target.value);
+    verbosityDisplay.textContent = verbosityLevels[value];
+});
+
+// Method selection radio buttons
+const methodDocumentRadio = document.getElementById("method-document");
+const methodResearchRadio = document.getElementById("method-research");
+const documentMethodSection = document.getElementById("document-method");
+const researchMethodSection = document.getElementById("research-method");
+const inputTextarea = document.getElementById("input-text");
+const aiTopicTextarea = document.getElementById("ai-topic");
+
+function updateMethodVisibility() {
+    if (methodDocumentRadio.checked) {
+        documentMethodSection.style.display = "block";
+        researchMethodSection.style.display = "none";
+        inputTextarea.disabled = false;
+        aiTopicTextarea.disabled = true;
+        aiTopicTextarea.value = ""; // Clear research topic
+        document.getElementById("word-count").textContent = "0";
+    } else {
+        documentMethodSection.style.display = "none";
+        researchMethodSection.style.display = "block";
+        inputTextarea.disabled = true;
+        aiTopicTextarea.disabled = false;
+        inputTextarea.value = ""; // Clear document text
+    }
+}
+
+methodDocumentRadio.addEventListener("change", updateMethodVisibility);
+methodResearchRadio.addEventListener("change", updateMethodVisibility);
+
+// AI Topic word counter
+const wordCountDisplay = document.getElementById("word-count");
+
+aiTopicTextarea.addEventListener("input", (e) => {
+    const text = e.target.value.trim();
+    const words = text.length > 0 ? text.split(/\s+/).length : 0;
+    wordCountDisplay.textContent = words;
+    
+    // Prevent typing if over 20 words
+    if (words > 20) {
+        const wordsArray = text.split(/\s+/);
+        const truncated = wordsArray.slice(0, 20).join(' ');
+        e.target.value = truncated;
+        wordCountDisplay.textContent = 20;
+    }
+    
+    // Color coding
+    if (words > 15) {
+        wordCountDisplay.style.color = "#d32f2f";
+    } else if (words > 10) {
+        wordCountDisplay.style.color = "#f57c00";
+    } else {
+        wordCountDisplay.style.color = "#666";
+    }
+});
+
 // File upload handling
 document.getElementById("file-input").addEventListener("change", async (e) => {
     const file = e.target.files[0];
@@ -416,10 +524,22 @@ document.getElementById("file-input").addEventListener("change", async (e) => {
 
 // Process document
 document.getElementById("process-btn").addEventListener("click", async () => {
+    const isDocumentMethod = document.getElementById("method-document").checked;
     const text = document.getElementById("input-text").value.trim();
-    if(!text) { alert("Please enter text!"); return; }
+    const aiTopic = document.getElementById("ai-topic").value.trim();
+    
+    if(isDocumentMethod && !text) { 
+        alert("Please enter or upload document text in Method 1!"); 
+        return; 
+    }
+    
+    if(!isDocumentMethod && !aiTopic) {
+        alert("Please enter a research topic in Method 2!");
+        return;
+    }
 
     const selectedModel = models[parseInt(document.getElementById("model-slider").value)];
+    const selectedVerbosity = verbosityLevels[parseInt(document.getElementById("verbosity-slider").value)];
     const outputDiv = document.getElementById("output");
     const processBtn = document.getElementById("process-btn");
     const downloadBtn = document.getElementById("download-btn");
@@ -429,10 +549,21 @@ document.getElementById("process-btn").addEventListener("click", async () => {
     downloadBtn.disabled = true;
     processBtn.innerHTML = `<span>⏳</span> Processing...`;
     
-    outputDiv.innerHTML = `<div style='padding: 40px; text-align: center; color: #666;'>Processing with ${selectedModel}...</div>`;
+    const processingText = isDocumentMethod ? 
+        `Processing document with ${selectedModel}...` : 
+        `Researching "${aiTopic}" with ${selectedModel}...`;
+    
+    outputDiv.innerHTML = `<div style='padding: 40px; text-align: center; color: #666;'>${processingText}</div>`;
 
     try {
-        const response = await fetch("/api/process", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ text, model: selectedModel }) });
+        const requestData = {
+            text: isDocumentMethod ? text : "",
+            aiTopic: isDocumentMethod ? "" : aiTopic,
+            model: selectedModel,
+            verbosity: selectedVerbosity
+        };
+        
+        const response = await fetch("/api/process", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(requestData) });
         const data = await response.json();
         console.log("AI API response:", data);
 
