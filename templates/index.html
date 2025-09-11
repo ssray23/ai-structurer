@@ -82,12 +82,21 @@ body {
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     margin: 0 auto;
 }
-h1 { 
+.container h1 { 
     text-align: center; 
     font-size: 32px;
-    font-weight: 300;
+    font-weight: 700 !important;
     margin-bottom: 10px;
-    color: #333;
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7, #fd79a8);
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientShift 3s ease-in-out infinite;
+}
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
 }
 .subtitle {
     text-align: center;
@@ -306,7 +315,7 @@ textarea {
   <!-- Input Section (Left Half) -->
   <div class="input-section">
     <div class="container">
-      <h1>Universal Document Structurer v2</h1>
+      <h1>Universal Document Structurer</h1>
       <div class="subtitle">Transform any text content into perfectly structured A4 documents</div>
 
       <div class="method-section">

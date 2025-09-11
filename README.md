@@ -6,10 +6,12 @@ Transform any unstructured text into beautifully formatted A4 documents with AI-
 
 - **AI-Powered Document Structuring**: Uses OpenAI GPT models to intelligently structure content
 - **Dynamic Theme Detection**: Automatically detects content themes (finance, tech, health, auto) and applies appropriate color schemes
-- **A4-Formatted Output**: Professional document formatting optimized for printing
-- **Real-Time Preview**: See your formatted document instantly in the browser
+- **A4-Formatted Output**: Professional document formatting optimized for printing with full width display
+- **Real-Time Preview**: See your formatted document instantly in the browser with exact download formatting
 - **Multiple Export Options**: Download as HTML or PDF
 - **Split-Screen Interface**: Input on left, formatted output on right
+- **Animated Gradient Branding**: Beautiful animated gradient title with professional styling
+- **Theme-Consistent Documents**: Generated documents follow theme colors without interference
 
 ## 🏗️ Architecture
 
@@ -115,11 +117,13 @@ The system uses carefully crafted prompts to:
 - Generate professional formatting
 
 ### Styling Features
-- **A4 Format**: 21cm × 29.7cm document size
+- **A4 Format**: 21cm × 29.7cm document size with full-width preview
 - **Professional Typography**: Helvetica font family
 - **Visual Elements**: Fact boxes, stat grids, tables
 - **Print Optimization**: Special CSS for print media
 - **Responsive Design**: Adapts to different screen sizes
+- **Animated Branding**: Gradient-filled app title with smooth color transitions
+- **Scoped Styling**: Document themes remain pure without UI interference
 
 ## 🔧 API Endpoints
 
