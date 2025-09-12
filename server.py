@@ -47,7 +47,7 @@ def web_search(query, num_results=3):
 
 A4_CSS_TEMPLATE = """.a4 {{
     width: 21cm;
-    max-width: 100%;
+    max-width: 95%;
     min-height: 29.7cm;
     padding: 0.6cm;
     background: white;
@@ -56,6 +56,13 @@ A4_CSS_TEMPLATE = """.a4 {{
     font-family: Helvetica, Arial, sans-serif;
     font-size: 16px;
     line-height: 1.6;
+    transform-origin: top center;
+}}
+@media (max-width: 1600px) {{
+    .a4 {{
+        width: 18cm;
+        max-width: 90%;
+    }}
 }}
 html, body {{
     height: 100%;
@@ -168,6 +175,10 @@ code {{
     padding: 12px 16px;
     margin: 10px 0;
 }}
+.fact strong,
+.fact::first-line {{
+    font-weight: bold;
+}}
 .stat-grid {{
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -245,25 +256,54 @@ def index():
     return render_template("index.html")
 
 def extract_theme(text: str) -> str:
-    text_lower = text.lower()
-    
-    # Finance keywords
-    if any(word in text_lower for word in ["bank", "finance", "financial", "tax", "loan", "investment", "money", "revenue", "profit", "budget", "cost", "expense", "payment", "accounting", "economic"]):
-        return "finance"
-    
-    # Health keywords (expanded)
-    if any(word in text_lower for word in ["health", "medical", "hospital", "doctor", "patient", "treatment", "medicine", "healthcare", "cancer", "disease", "therapy", "clinical", "pharmaceutical", "diagnosis", "wellness", "surgery"]):
-        return "health"
-    
-    # Technology keywords
-    if any(word in text_lower for word in ["tech", "technology", "software", "digital", "ai", "artificial intelligence", "computer", "data", "algorithm", "programming", "app", "system", "platform", "cloud", "iphone", "android", "internet", "web"]):
-        return "tech"
-    
-    # Automotive keywords
-    if any(word in text_lower for word in ["car", "vehicle", "auto", "automotive", "transport", "driving", "engine", "fuel", "electric vehicle", "tesla", "ford", "toyota"]):
-        return "auto"
-    
-    return "default"
+    """AI-powered theme detection using OpenAI to analyze content and suggest appropriate theme"""
+    try:
+        # Use comprehensive analysis for better accuracy
+        theme_prompt = f"""You are an expert content analyst. Analyze the following text and determine the most appropriate visual theme category based on the primary subject matter and content focus.
+
+Text to analyze:
+"{text[:800]}"
+
+Available theme categories:
+- finance: Banking, money, investments, economics, business finance, financial markets, accounting, budgets, costs, revenue, profits, loans, taxes
+- health: Medical topics, healthcare, wellness, pharmaceuticals, clinical research, diseases, treatments, hospitals, doctors, patients, therapy
+- tech: Technology, software, AI, digital systems, computing, programming, apps, platforms, internet, web development, data science
+- auto: Automotive industry, cars, vehicles, transportation, car brands, sales data, automotive manufacturing, driving, engines
+- default: General topics, lifestyle, education, or content that doesn't clearly fit the specialized categories above
+
+Instructions:
+1. Focus on the PRIMARY subject matter, not just individual keywords
+2. Consider the overall context and purpose of the content
+3. If the content spans multiple categories, choose the most dominant one
+4. Be specific - automotive content about car sales/popularity should be "auto", not "default"
+
+Respond with ONLY the theme category name: finance, health, tech, auto, or default"""
+
+        response = openai.chat.completions.create(
+            model="gpt-4o",  # Use more powerful model for better accuracy
+            messages=[
+                {"role": "system", "content": "You are a precise content categorization expert. Always respond with exactly one word: the theme category name."},
+                {"role": "user", "content": theme_prompt}
+            ],
+            max_tokens=20,  # Allow some flexibility for response
+            temperature=0,  # Maximum consistency
+            timeout=30  # Shorter timeout for theme detection
+        )
+        
+        detected_theme = response.choices[0].message.content.strip().lower()
+        
+        # Validate the response is one of our supported themes
+        valid_themes = ["finance", "health", "tech", "auto", "default"]
+        if detected_theme in valid_themes:
+            print(f"DEBUG: AI detected theme: {detected_theme} for content: {text[:100]}...")
+            return detected_theme
+        else:
+            print(f"DEBUG: AI returned invalid theme '{detected_theme}', using default for content: {text[:100]}...")
+            return "default"
+            
+    except Exception as e:
+        print(f"DEBUG: Theme detection failed: {e}, using default for content: {text[:100]}...")
+        return "default"
 
 def calculate_cost(model_name, prompt_tokens, completion_tokens):
     """Calculate cost based on model pricing (as of 2024)"""
@@ -395,7 +435,7 @@ Create a professional document following this EXACT structure (like a medical/sc
 <p>More content and analysis.</p>
 
 <div class="fact card">
-Key finding or important fact from the analysis.
+<strong>Key finding:</strong> Important fact or insight from the analysis.
 </div>
 
 <h2>Data Table</h2>
@@ -423,9 +463,9 @@ Key finding or important fact from the analysis.
   <li>Key point 3</li>
 </ul>
 
-<div class="note">
-Final summary and key takeaways.
-</div>
+<p style="font-weight: bold;">
+Final summary and key takeaways with bold formatting for emphasis.
+</p>
 
 MANDATORY TABLE REQUIREMENTS:
 - EVERY document MUST contain at least 1-2 tables
@@ -451,6 +491,9 @@ COMPREHENSIVE VERBOSITY EXTRA REQUIREMENTS:
 CRITICAL RULES:
 - NO nested cards or divs inside cards
 - Use EXACT stat structure with .big and .sub classes
+- ALL stat boxes MUST be inside <div class="stat-grid"> container
+- NEVER put stat boxes outside the stat-grid div
+- Each stat box MUST follow this exact format: <div class="stat"><div class="big">NUMBER</div><div class="sub">description</div></div>
 - Keep paragraphs concise and professional
 - Extract all numbers into stat boxes
 - CREATE TABLES FROM EVERYTHING POSSIBLE
@@ -488,7 +531,7 @@ Content to process:
                         {"role": "user", "content": prompt}
                     ],
                     max_tokens=max_tokens,
-                    timeout=30  # 30 second timeout
+                    timeout=60  # Increased to 60 second timeout for comprehensive processing
                 )
                 break  # Success, exit retry loop
             except Exception as e:

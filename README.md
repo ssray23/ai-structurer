@@ -17,17 +17,19 @@ Transform any unstructured text into beautifully formatted A4 documents with AI-
 - **Radio Button Interface**: Clear method selection with auto-switching and field clearing
 
 ### Intelligence Features  
+- **3-Tier AI Model Selection**: GPT-4o-mini (fast), Gemini Pro 2.5 (balanced), GPT-5 (advanced reasoning)
 - **3-Tier Verbosity Control**: Concise, Detailed, or Comprehensive output with different content depths
+- **AI-Powered Theme Detection**: Intelligent content analysis using GPT-4o for accurate theme categorization
 - **Enhanced Web Search**: 5 search results for research mode, 2 for document processing
-- **Smart Theme Detection**: Expanded keyword recognition including "cancer" → health, "AI" → tech
-- **Connection Resilience**: 3-attempt retry logic for API reliability
+- **Connection Resilience**: 3-attempt retry logic with 60-second timeout for comprehensive processing
 
 ### User Experience
-- **Split-Screen Interface**: Input on left, formatted output on right with perfect A4 scaling
+- **Responsive Split-Screen**: 48/52 layout optimized for Surface 5 laptop at 150% scale
+- **Auto-Hide Scrollbars**: Clean interface with scrollbars appearing only on hover
 - **Animated Gradient Branding**: Beautiful rainbow gradient title with smooth color transitions
 - **Real-Time Word Counter**: 20-word limit enforcement with color-coded feedback
-- **Improved Font Consistency**: 16px readable text matching downloaded documents
-- **Theme-Consistent Documents**: Generated documents follow theme colors without UI interference
+- **Perfectly Aligned Sliders**: Precise slider knob alignment with text labels
+- **Optimized A4 Scaling**: Responsive document width (18cm on smaller screens) eliminating horizontal scrollbars
 
 ## 🏗️ Architecture
 
@@ -123,31 +125,31 @@ Open your browser and go to: `http://localhost:5000`
 
 The application automatically detects content themes and applies appropriate styling:
 
-| Theme | Colors | Triggers |
+| Theme | Colors | AI-Powered Detection |
 |-------|--------|----------|
-| **Finance** | Green | finance, money, investment, revenue |
-| **Technology** | Blue | tech, software, AI, digital, iPhone |
-| **Health** | Pink | health, medical, wellness, fitness |
-| **Automotive** | Orange | car, vehicle, automotive, transport |
-| **Default** | Blue | Fallback theme |
+| **Finance** | Green (#28a745) | AI analyzes content for financial topics, investments, economics |
+| **Technology** | Blue (#007bff) | AI detects tech content, software, AI, digital systems |
+| **Health** | Pink (#e83e8c) | AI identifies medical, healthcare, wellness content |
+| **Automotive** | Orange (#fd7e14) | AI recognizes car brands, vehicle sales, transportation |
+| **Default** | Gray (#6c757d) | Fallback for general content |
 
 ## 📊 Content Processing
 
 ### AI Prompt Engineering
 The system uses carefully crafted prompts to:
-- Identify document structure and hierarchy
-- Extract key statistics and facts
-- Create appropriate tables and visual elements
-- Generate professional formatting
+- **Dual AI System**: GPT-4o for theme detection + user-selected model for content generation
+- **Intelligent Structure Recognition**: Identifies document hierarchy and key elements
+- **Consistent Stat Box Generation**: Enforced HTML structure for reliable visual formatting
+- **Table-First Approach**: Converts structured information into professional tables
+- **Bold Summary Styling**: Enhanced conclusion formatting for emphasis
 
 ### Styling Features
-- **A4 Format**: 21cm × 29.7cm document size with full-width preview
-- **Professional Typography**: Helvetica font family
-- **Visual Elements**: Fact boxes, stat grids, tables
-- **Print Optimization**: Special CSS for print media
-- **Responsive Design**: Adapts to different screen sizes
-- **Animated Branding**: Gradient-filled app title with smooth color transitions
-- **Scoped Styling**: Document themes remain pure without UI interference
+- **Responsive A4 Format**: 21cm standard, 18cm on smaller screens (eliminates scrollbars)
+- **Professional Typography**: Helvetica font family with consistent 16px sizing
+- **Enhanced Visual Elements**: Properly styled fact boxes, stat grids, tables with theme colors
+- **Print Optimization**: Special CSS for print media with scaled content
+- **Clean Interface**: Auto-hiding scrollbars, surgical gap adjustments, precise alignments
+- **Surface 5 Optimized**: Perfect 150% scale viewing without horizontal scrollbars
 
 ## 🔧 API Endpoints
 

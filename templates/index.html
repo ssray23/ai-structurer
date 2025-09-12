@@ -16,7 +16,7 @@ body {
     min-height: 100vh;
 }
 .input-section {
-    width: 50%;
+    width: 48%;
     padding: 40px 20px;
     background: #f5f5f5;
     overflow-y: auto;
@@ -26,26 +26,30 @@ body {
     top: 0;
     bottom: 0;
     /* Auto-hide scrollbars */
-    scrollbar-width: thin;
-    scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+    scrollbar-width: none;
+    scrollbar-color: transparent transparent;
 }
 .input-section::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+.input-section:hover::-webkit-scrollbar {
     width: 6px;
 }
 .input-section::-webkit-scrollbar-track {
     background: transparent;
 }
 .input-section::-webkit-scrollbar-thumb {
-    background-color: rgba(155, 155, 155, 0.5);
+    background-color: rgba(155, 155, 155, 0.3);
     border-radius: 10px;
     border: transparent;
 }
-.input-section::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(155, 155, 155, 0.8);
+.input-section:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(155, 155, 155, 0.6);
 }
 .output-section {
-    width: 50%;
-    margin-left: 50%;
+    width: 52%;
+    margin-left: 48%;
     background: #f6f7f8;
     min-height: 100vh;
     padding: 20px;
@@ -53,25 +57,29 @@ body {
     overflow-y: auto;
     overflow-x: auto;
     /* Auto-hide scrollbars */
-    scrollbar-width: thin;
-    scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+    scrollbar-width: none;
+    scrollbar-color: transparent transparent;
     display: flex;
     align-items: flex-start;
     justify-content: center;
 }
 .output-section::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+.output-section:hover::-webkit-scrollbar {
     width: 6px;
 }
 .output-section::-webkit-scrollbar-track {
     background: transparent;
 }
 .output-section::-webkit-scrollbar-thumb {
-    background-color: rgba(155, 155, 155, 0.5);
+    background-color: rgba(155, 155, 155, 0.3);
     border-radius: 10px;
     border: transparent;
 }
-.output-section::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(155, 155, 155, 0.8);
+.output-section:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(155, 155, 155, 0.6);
 }
 .container { 
     width: 100%;
@@ -186,12 +194,36 @@ body {
     background: #007acc;
     cursor: pointer;
 }
+.slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #007acc;
+    cursor: pointer;
+    border: none;
+}
 .slider-labels {
     display: flex;
     justify-content: space-between;
     font-size: 12px;
     color: #666;
     margin-top: 5px;
+    position: relative;
+}
+.slider-labels span:first-child {
+    position: absolute;
+    left: 5px;
+    transform: translateX(0);
+}
+.slider-labels span:nth-child(2) {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.slider-labels span:last-child {
+    position: absolute;
+    right: 5px;
+    transform: translateX(0);
 }
 .action-buttons {
     display: flex;
@@ -237,7 +269,7 @@ body {
     border: 1px solid #ffeaa7;
     border-radius: 8px;
     padding: 20px;
-    margin: 20px 0;
+    margin: 20px 0 5px 0;
 }
 .tips-section h4 {
     margin: 0 0 10px 0;
@@ -374,7 +406,7 @@ textarea {
           </div>
         </div>
 
-        <div class="tolerance-control">
+        <div class="tolerance-control" style="margin-top: 40px;">
           <div class="tolerance-label">
             📝 Output Verbosity: <span id="verbosity-display">Detailed</span>
           </div>
@@ -409,7 +441,7 @@ textarea {
       </div>
 
       <!-- Theme Detection Display -->
-      <div id="theme-display" style="display: none;">
+      <div id="theme-display" style="display: none; margin-top: 0px;">
         <div class="theme-indicator" id="theme-indicator">
           <span id="theme-text"></span>
         </div>
@@ -549,11 +581,25 @@ document.getElementById("process-btn").addEventListener("click", async () => {
     downloadBtn.disabled = true;
     processBtn.innerHTML = `<span>⏳</span> Processing...`;
     
+    // Clear any existing stats immediately when starting processing
+    const existingStats = document.getElementById("processing-stats");
+    if(existingStats) existingStats.remove();
+    
+    // Show "Calculating..." in the stats section (left side)
+    const statsDiv = document.createElement("div");
+    statsDiv.id = "processing-stats";
+    statsDiv.style.cssText = "margin-top: 15px; padding: 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; font-size: 12px; color: #495057;";
+    statsDiv.innerHTML = `<strong>📊 Processing Stats:</strong><br>Calculating...`;
+    document.getElementById("theme-display").appendChild(statsDiv);
+    document.getElementById("theme-display").style.display = "block";
+    
     const processingText = isDocumentMethod ? 
         `Processing document with ${selectedModel}...` : 
         `Researching "${aiTopic}" with ${selectedModel}...`;
     
-    outputDiv.innerHTML = `<div style='padding: 40px; text-align: center; color: #666;'>${processingText}</div>`;
+    outputDiv.innerHTML = `<div style='padding: 40px; text-align: center; color: #666;'>
+        <div style='font-size: 18px; margin-bottom: 10px;'>${processingText}</div>
+    </div>`;
 
     try {
         const requestData = {
@@ -564,7 +610,17 @@ document.getElementById("process-btn").addEventListener("click", async () => {
         };
         
         const response = await fetch("/api/process", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(requestData) });
-        const data = await response.json();
+        
+        // Check if response is JSON before parsing
+        const contentType = response.headers.get("content-type");
+        let data;
+        if (contentType && contentType.includes("application/json")) {
+            data = await response.json();
+        } else {
+            // Server returned HTML error page instead of JSON
+            const errorText = await response.text();
+            throw new Error(`Server returned HTML instead of JSON. Status: ${response.status}. Response: ${errorText.substring(0, 200)}...`);
+        }
         console.log("AI API response:", data);
 
         if(data.html) {
