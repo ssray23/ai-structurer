@@ -430,14 +430,10 @@ def process():
 
     # Handle AI Research vs Document Processing
     if is_ai_research:
-        # For AI research mode, do extensive web search (disabled in production)
+        # For AI research mode, do extensive web search
         search_query = ai_topic
-        if not config.IS_PRODUCTION:
-            search_results = web_search(search_query, num_results=5)
-            print(f"DEBUG: AI Research - Found {len(search_results)} web search results")
-        else:
-            search_results = []
-            print(f"DEBUG: AI Research disabled in production - using AI knowledge only")
+        search_results = web_search(search_query, num_results=5)
+        print(f"DEBUG: AI Research - Found {len(search_results)} web search results")
         
         # Create research context
         search_context = f"\n\nWeb Research Results for '{ai_topic}':\n"
@@ -470,8 +466,8 @@ def process():
         "Comprehensive": "Provide EXTENSIVE analysis with maximum detail. REQUIREMENTS: 4-6 paragraphs per section, 6+ stat boxes, 3-4 detailed tables, visual timelines (when applicable), comparison tables, market analysis, trend data, future projections, case studies, and deep contextual insights. Make the document comprehensive like a research report."
     }
     
-    # Disable AI research on production to prevent timeouts
-    if is_ai_research and not config.IS_PRODUCTION:
+    # Determine content type instructions
+    if is_ai_research:
         content_instruction = f"""
 RESEARCH MODE: You are researching and creating a comprehensive document about: "{ai_topic}"
 
