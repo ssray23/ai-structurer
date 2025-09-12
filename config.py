@@ -42,14 +42,14 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     """Production configuration optimized for Render free tier"""
     DEBUG = False
-    API_TIMEOUT = int(os.getenv("API_TIMEOUT", "25"))  # Conservative for free tier
-    MAX_RETRIES = int(os.getenv("MAX_RETRIES", "2"))  # Fewer retries to stay within limits
+    API_TIMEOUT = int(os.getenv("API_TIMEOUT", "20"))  # Very conservative for free tier
+    MAX_RETRIES = int(os.getenv("MAX_RETRIES", "1"))  # Single retry to avoid cascading timeouts
     
-    # Reduced limits for production stability
+    # Very reduced limits for production stability
     MAX_TOKENS = {
-        "Concise": int(os.getenv("MAX_TOKENS_CONCISE", "1500")),
-        "Detailed": int(os.getenv("MAX_TOKENS_DETAILED", "2500")),
-        "Comprehensive": int(os.getenv("MAX_TOKENS_COMPREHENSIVE", "3000"))
+        "Concise": int(os.getenv("MAX_TOKENS_CONCISE", "1000")),
+        "Detailed": int(os.getenv("MAX_TOKENS_DETAILED", "1500")),
+        "Comprehensive": int(os.getenv("MAX_TOKENS_COMPREHENSIVE", "2000"))
     }
 
 class TestingConfig(Config):

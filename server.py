@@ -21,6 +21,8 @@ MAX_TOKENS_CONFIG = config.MAX_TOKENS
 BRAVE_API_KEY = config.BRAVE_API_KEY
 
 # Log configuration on startup
+print(f"INFO: RENDER env var = {os.getenv('RENDER', 'NOT_SET')}")
+print(f"INFO: ENVIRONMENT env var = {os.getenv('ENVIRONMENT', 'NOT_SET')}")
 print(f"INFO: Running in {config.ENVIRONMENT} mode")
 print(f"INFO: API timeout set to {API_TIMEOUT}s, max retries: {MAX_RETRIES}")
 print(f"INFO: Token limits - Concise: {MAX_TOKENS_CONFIG['Concise']}, Detailed: {MAX_TOKENS_CONFIG['Detailed']}, Comprehensive: {MAX_TOKENS_CONFIG['Comprehensive']}")
