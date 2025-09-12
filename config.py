@@ -73,8 +73,10 @@ config_map = {
 
 def get_config():
     """Get the appropriate configuration based on environment"""
-    environment = os.getenv("ENVIRONMENT", "development").lower()
-    return config_map.get(environment, DevelopmentConfig)
+    # Use same logic as Config class for consistency
+    environment = os.getenv("ENVIRONMENT", 
+                           "production" if os.getenv("RENDER") else "development").lower()
+    return config_map.get(environment, DevelopmentConfig)()
 
 # Global configuration instance
 app_config = get_config()
