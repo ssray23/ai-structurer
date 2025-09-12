@@ -4,12 +4,12 @@ import os
 import requests
 import json
 from openai import OpenAIError
-from config import app_config
+from config import get_config
 
 app = Flask(__name__)
 
-# Load configuration
-config = app_config
+# Load configuration (fresh import to avoid caching issues)
+config = get_config()
 openai.api_key = config.OPENAI_API_KEY
 if not openai.api_key:
     raise ValueError("Please set your OPENAI_API_KEY environment variable.")
