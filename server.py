@@ -92,8 +92,9 @@ h1 {{
     font-size: 38px;
     font-family: Helvetica, Arial, sans-serif;
     font-weight: bold;
-    margin-bottom: 8px;
+    margin-bottom: 20px;
     margin-top: 0px;
+    line-height: 1.3;
 }}
 h2 {{
     font-size: 24px;
