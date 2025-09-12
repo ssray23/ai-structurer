@@ -5,8 +5,9 @@ import os
 
 class Config:
     """Base configuration class"""
-    # Environment detection
-    ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
+    # Environment detection - auto-detect production on Render
+    ENVIRONMENT = os.getenv("ENVIRONMENT", 
+                           "production" if os.getenv("RENDER") else "development").lower()
     IS_PRODUCTION = ENVIRONMENT == "production"
     
     # API Keys
