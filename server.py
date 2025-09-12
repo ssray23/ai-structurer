@@ -4,25 +4,37 @@ import os
 import requests
 import json
 from openai import OpenAIError
+from config import app_config
 
 app = Flask(__name__)
 
-# Load API keys from environment
-openai.api_key = os.getenv("OPENAI_API_KEY")
-brave_api_key = os.getenv("BRAVE_API_KEY")
+# Load configuration
+config = app_config
+openai.api_key = config.OPENAI_API_KEY
 if not openai.api_key:
     raise ValueError("Please set your OPENAI_API_KEY environment variable.")
 
+# Global configuration variables
+API_TIMEOUT = config.API_TIMEOUT
+MAX_RETRIES = config.MAX_RETRIES
+MAX_TOKENS_CONFIG = config.MAX_TOKENS
+BRAVE_API_KEY = config.BRAVE_API_KEY
+
+# Log configuration on startup
+print(f"INFO: Running in {config.ENVIRONMENT} mode")
+print(f"INFO: API timeout set to {API_TIMEOUT}s, max retries: {MAX_RETRIES}")
+print(f"INFO: Token limits - Concise: {MAX_TOKENS_CONFIG['Concise']}, Detailed: {MAX_TOKENS_CONFIG['Detailed']}, Comprehensive: {MAX_TOKENS_CONFIG['Comprehensive']}")
+
 def web_search(query, num_results=3):
     """Search the web using Brave Search API"""
-    if not brave_api_key:
+    if not BRAVE_API_KEY:
         return []
     
     try:
         headers = {
             "Accept": "application/json",
             "Accept-Encoding": "gzip",
-            "X-Subscription-Token": brave_api_key
+            "X-Subscription-Token": BRAVE_API_KEY
         }
         
         params = {
@@ -602,15 +614,11 @@ Content to process:
         actual_model = model_map.get(selected_model, "gpt-4o")
         
         # Retry logic for connection errors
-        max_retries = 3
+        max_retries = MAX_RETRIES
         for attempt in range(max_retries):
             try:
-                # Set max tokens based on verbosity
-                max_tokens = {
-                    "Concise": 1500,
-                    "Detailed": 2500, 
-                    "Comprehensive": 3000  # Reduced for production stability
-                }.get(verbosity, 2500)
+                # Set max tokens based on verbosity and environment
+                max_tokens = MAX_TOKENS_CONFIG.get(verbosity, MAX_TOKENS_CONFIG["Detailed"])
                 
                 response = openai.chat.completions.create(
                     model=actual_model,
@@ -619,7 +627,7 @@ Content to process:
                         {"role": "user", "content": prompt}
                     ],
                     max_tokens=max_tokens,
-                    timeout=30  # Reduced timeout for production deployment
+                    timeout=API_TIMEOUT
                 )
                 break  # Success, exit retry loop
             except Exception as e:

@@ -1,0 +1,79 @@
+"""
+Configuration settings for AI Document Structurer
+"""
+import os
+
+class Config:
+    """Base configuration class"""
+    # Environment detection
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
+    IS_PRODUCTION = ENVIRONMENT == "production"
+    
+    # API Keys
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    BRAVE_API_KEY = os.getenv("BRAVE_API_KEY")
+    OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    
+    # Default timeouts and limits
+    DEFAULT_API_TIMEOUT = 60
+    DEFAULT_MAX_RETRIES = 3
+    
+    # Default token limits
+    DEFAULT_TOKENS = {
+        "Concise": 2000,
+        "Detailed": 3500,
+        "Comprehensive": 4500
+    }
+
+class DevelopmentConfig(Config):
+    """Development/Local configuration"""
+    DEBUG = True
+    API_TIMEOUT = int(os.getenv("API_TIMEOUT", Config.DEFAULT_API_TIMEOUT))
+    MAX_RETRIES = int(os.getenv("MAX_RETRIES", Config.DEFAULT_MAX_RETRIES))
+    
+    # Generous limits for development
+    MAX_TOKENS = {
+        "Concise": int(os.getenv("MAX_TOKENS_CONCISE", Config.DEFAULT_TOKENS["Concise"])),
+        "Detailed": int(os.getenv("MAX_TOKENS_DETAILED", Config.DEFAULT_TOKENS["Detailed"])),
+        "Comprehensive": int(os.getenv("MAX_TOKENS_COMPREHENSIVE", Config.DEFAULT_TOKENS["Comprehensive"]))
+    }
+
+class ProductionConfig(Config):
+    """Production configuration optimized for Render free tier"""
+    DEBUG = False
+    API_TIMEOUT = int(os.getenv("API_TIMEOUT", "25"))  # Conservative for free tier
+    MAX_RETRIES = int(os.getenv("MAX_RETRIES", "2"))  # Fewer retries to stay within limits
+    
+    # Reduced limits for production stability
+    MAX_TOKENS = {
+        "Concise": int(os.getenv("MAX_TOKENS_CONCISE", "1500")),
+        "Detailed": int(os.getenv("MAX_TOKENS_DETAILED", "2500")),
+        "Comprehensive": int(os.getenv("MAX_TOKENS_COMPREHENSIVE", "3000"))
+    }
+
+class TestingConfig(Config):
+    """Testing configuration"""
+    TESTING = True
+    API_TIMEOUT = int(os.getenv("API_TIMEOUT", "10"))
+    MAX_RETRIES = int(os.getenv("MAX_RETRIES", "1"))
+    
+    MAX_TOKENS = {
+        "Concise": int(os.getenv("MAX_TOKENS_CONCISE", "500")),
+        "Detailed": int(os.getenv("MAX_TOKENS_DETAILED", "1000")),
+        "Comprehensive": int(os.getenv("MAX_TOKENS_COMPREHENSIVE", "1500"))
+    }
+
+# Configuration mapping
+config_map = {
+    'development': DevelopmentConfig,
+    'production': ProductionConfig,
+    'testing': TestingConfig
+}
+
+def get_config():
+    """Get the appropriate configuration based on environment"""
+    environment = os.getenv("ENVIRONMENT", "development").lower()
+    return config_map.get(environment, DevelopmentConfig)
+
+# Global configuration instance
+app_config = get_config()
