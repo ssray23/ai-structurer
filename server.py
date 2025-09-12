@@ -223,6 +223,76 @@ code {{
     line-height: 1.35;
     color: {theme_color};
 }}
+.timeline {{
+    position: relative;
+    margin: 20px 0 20px 60px;
+    padding: 0;
+    font-family: Helvetica, Arial, sans-serif;
+}}
+.timeline::before {{
+    content: '';
+    position: absolute;
+    left: 50px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: {theme_color};
+}}
+.timeline-item {{
+    position: relative;
+    margin-bottom: 24px;
+    padding-left: 70px;
+    font-family: Helvetica, Arial, sans-serif;
+}}
+.timeline-item::before {{
+    content: '';
+    position: absolute;
+    left: 44px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: {theme_color};
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px {theme_color};
+}}
+.timeline-date {{
+    position: absolute;
+    left: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    font-weight: 600;
+    color: {theme_color};
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    line-height: 1.2;
+    font-family: Helvetica, Arial, sans-serif;
+    width: 40px;
+}}
+.timeline-content {{
+    background: #fff;
+    border: 1px solid {theme_color}40;
+    border-radius: 8px;
+    padding: 12px 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    font-family: Helvetica, Arial, sans-serif;
+}}
+.timeline-title {{
+    font-size: 14px;
+    font-weight: 600;
+    color: {theme_color};
+    margin: 0 0 6px 0;
+    font-family: Helvetica, Arial, sans-serif;
+}}
+.timeline-description {{
+    font-size: 13px;
+    color: #333;
+    line-height: 1.4;
+    margin: 0;
+    font-family: Helvetica, Arial, sans-serif;
+}}
 @media print {{
     body {{
         background: none;
@@ -378,7 +448,7 @@ def process():
     verbosity_instructions = {
         "Concise": "Keep content brief and focused. Use 1-2 paragraphs per section, 2-3 stat boxes, and 1 small table. Prioritize key information only.",
         "Detailed": "Provide balanced detail. Use 2-3 paragraphs per section, 3 stat boxes, and 1-2 comprehensive tables. Include supporting analysis.",
-        "Comprehensive": "Provide EXTENSIVE analysis with maximum detail. REQUIREMENTS: 4-6 paragraphs per section, 6+ stat boxes, 3-4 detailed tables, timeline tables, comparison tables, market analysis, trend data, future projections, case studies, and deep contextual insights. Make the document comprehensive like a research report."
+        "Comprehensive": "Provide EXTENSIVE analysis with maximum detail. REQUIREMENTS: 4-6 paragraphs per section, 6+ stat boxes, 3-4 detailed tables, visual timelines (when applicable), comparison tables, market analysis, trend data, future projections, case studies, and deep contextual insights. Make the document comprehensive like a research report."
     }
     
     # Determine content type instructions
@@ -475,12 +545,30 @@ MANDATORY TABLE REQUIREMENTS:
   • Categories/classifications → category table
   • Steps/processes → process table
   • Key-value pairs → data table
-  • Timeline events → timeline table
+  • Timeline events → visual timeline (NOT table)
 - Even simple bullet points MUST become tables with headers like "Item", "Description", "Details"
+
+TIMELINE STRUCTURE (when events/dates are present):
+Use this HTML structure for chronological events WITHIN content sections, NOT after summary:
+<div class="timeline">
+  <div class="timeline-item">
+    <div class="timeline-date">2024</div>
+    <div class="timeline-content">
+      <div class="timeline-title">Event Title</div>
+      <div class="timeline-description">Event description...</div>
+    </div>
+  </div>
+</div>
+
+DOCUMENT STRUCTURE ORDER:
+1. Main content sections with analysis
+2. Timeline (if applicable) within relevant content sections  
+3. Tables and data analysis
+4. Summary section (ALWAYS LAST)
 
 COMPREHENSIVE VERBOSITY EXTRA REQUIREMENTS:
 {f"- CREATE MULTIPLE SECTIONS (6+ sections minimum) with extensive analysis" if verbosity == "Comprehensive" else ""}
-{f"- ADD TIMELINE TABLE with dates/milestones" if verbosity == "Comprehensive" else ""}
+{f"- ADD VISUAL TIMELINE with dates/milestones (use timeline HTML structure)" if verbosity == "Comprehensive" else ""}
 {f"- CREATE COMPARISON TABLES (before/after, competitor analysis, etc.)" if verbosity == "Comprehensive" else ""}
 {f"- INCLUDE MARKET ANALYSIS section with industry data" if verbosity == "Comprehensive" else ""}
 {f"- ADD FUTURE PROJECTIONS/TRENDS section" if verbosity == "Comprehensive" else ""}
