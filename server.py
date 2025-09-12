@@ -608,9 +608,9 @@ Content to process:
                 # Set max tokens based on verbosity
                 max_tokens = {
                     "Concise": 1500,
-                    "Detailed": 3000, 
-                    "Comprehensive": 4000  # Much higher for comprehensive documents
-                }.get(verbosity, 3000)
+                    "Detailed": 2500, 
+                    "Comprehensive": 3000  # Reduced for production stability
+                }.get(verbosity, 2500)
                 
                 response = openai.chat.completions.create(
                     model=actual_model,
@@ -619,7 +619,7 @@ Content to process:
                         {"role": "user", "content": prompt}
                     ],
                     max_tokens=max_tokens,
-                    timeout=60  # Increased to 60 second timeout for comprehensive processing
+                    timeout=30  # Reduced timeout for production deployment
                 )
                 break  # Success, exit retry loop
             except Exception as e:
