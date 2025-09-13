@@ -457,6 +457,52 @@ Respond with ONLY the theme category name: finance, health, tech, auto, food, or
         print(f"DEBUG: Theme detection failed: {e}, using default for content: {text[:100]}...")
         return "default"
 
+def generate_search_query(text: str, theme: str) -> str:
+    """AI-powered search query generation with robust fallback"""
+    # Robust fallback function first
+    def create_fallback_query():
+        words = text.lower().split()
+        stop_words = {'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those'}
+        meaningful_words = [w for w in words[:25] if len(w) > 3 and w not in stop_words and w.isalpha()]
+
+        if meaningful_words:
+            return f"{' '.join(meaningful_words[:4])} {theme} guidelines"
+        else:
+            return f"{theme} information guidelines"
+
+    try:
+        # Try AI-powered query generation
+        query_prompt = f"""Create a web search query for background information about this content.
+
+Content (theme: {theme}):
+"{text[:500]}"
+
+Extract 2-4 key concepts and create a search query (max 7 words) that would find relevant context, guidelines, or background information. Focus on concepts, not exact phrases.
+
+Query:"""
+
+        response = openai.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": query_prompt}],
+            max_tokens=25,
+            temperature=0.2,
+            timeout=15
+        )
+
+        ai_query = response.choices[0].message.content.strip().replace('"', '').replace("Query:", "").strip()
+
+        # Validate AI response
+        if len(ai_query.split()) > 8 or len(ai_query) < 10:
+            print(f"DEBUG: AI query invalid length, using fallback. AI returned: '{ai_query}'")
+            return create_fallback_query()
+
+        print(f"DEBUG: AI generated search query: '{ai_query}' for theme: {theme}")
+        return ai_query
+
+    except Exception as e:
+        print(f"DEBUG: AI query generation failed ({e}), using fallback")
+        return create_fallback_query()
+
 def calculate_cost(model_name, prompt_tokens, completion_tokens):
     """Calculate cost based on model pricing (as of 2024)"""
     pricing = {
@@ -513,10 +559,10 @@ def process():
         # Use the topic as the base text for processing
         processing_content = f"Research Topic: {ai_topic}{search_context}"
     else:
-        # Standard document processing with light web search
-        search_query = f"latest insights {' '.join(input_text.split()[:10])}"
+        # Standard document processing with AI-powered search query generation
+        search_query = generate_search_query(input_text, theme)
         search_results = web_search(search_query, num_results=2)
-        print(f"DEBUG: Document Processing - Found {len(search_results)} web search results")
+        print(f"DEBUG: Document Processing - Search query: '{search_query}' - Found {len(search_results)} web search results")
         
         search_context = ""
         if search_results:

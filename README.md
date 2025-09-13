@@ -21,7 +21,7 @@ Transform any unstructured text into beautifully formatted A4 documents with AI-
 - **3-Tier AI Model Selection**: GPT-4o-mini (fast), Gemini Pro 2.5 (balanced), GPT-5 (advanced reasoning)
 - **3-Tier Verbosity Control**: Concise, Detailed, or Comprehensive output with different content depths
 - **AI-Powered Theme Detection**: Intelligent content analysis using GPT-4o for accurate theme categorization
-- **Enhanced Web Search**: 5 search results for research mode, 2 for document processing
+- **🆕 AI-Powered Search Queries**: Intelligent web search using AI to generate contextually relevant queries instead of random keywords
 - **🆕 Smart Citations System**: Automatic generation of clickable source references with professional styling
 - **Connection Resilience**: 3-attempt retry logic with 60-second timeout for comprehensive processing
 
@@ -154,13 +154,25 @@ The system uses carefully crafted prompts to:
 - **Clean Interface**: Auto-hiding scrollbars, surgical gap adjustments, precise alignments
 - **Surface 5 Optimized**: Perfect 150% scale viewing without horizontal scrollbars
 
-### 🆕 Citations System
+### 🆕 AI-Powered Search & Citations System
+
+#### Smart Query Generation
+- **AI Content Analysis**: GPT-4o-mini analyzes your content to understand key concepts and context
+- **Contextual Search Queries**: Instead of using random keywords, AI generates focused search terms
+- **Examples**:
+  - Banking document → `"commercial property lease legal guidelines India"`
+  - Recipe content → `"peanut butter noodle cooking techniques"`
+  - Tech article → `"software development best practices"`
+- **Robust Fallback**: If AI fails, intelligent word extraction creates relevant backup queries
+- **Universal Adaptability**: Works with ANY content type - no hardcoded categories needed
+
+#### Professional Citations
 - **Automatic Source Detection**: Captures web search results and converts them to citations
 - **Professional Academic Styling**: Numbered badges, clickable titles, descriptive snippets
 - **Theme-Adaptive Styling**: Citations match document theme colors for visual consistency
 - **Interactive Links**: Click citations to open source websites in new tabs
 - **Structured Format**: Clean academic-style layout with proper spacing and typography
-- **Always Generated**: Every document includes a citations section, even for general knowledge content
+- **Always Generated**: Every document includes a citations section with relevant sources
 
 ## 🔧 API Endpoints
 
