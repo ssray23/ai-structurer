@@ -6,21 +6,23 @@ Transform any unstructured text into beautifully formatted A4 documents with AI-
 
 ### Core Functionality
 - **AI-Powered Document Structuring**: Uses OpenAI GPT models to intelligently structure content
-- **Dynamic Theme Detection**: Enhanced detection for finance, tech, health, auto themes with comprehensive keyword matching
+- **Dynamic Theme Detection**: Enhanced detection for finance, tech, health, auto, and **food** themes with comprehensive keyword matching
 - **A4-Formatted Output**: Professional document formatting optimized for printing with full width display
 - **Real-Time Preview**: See your formatted document instantly in the browser with exact download formatting
 - **Multiple Export Options**: Download as HTML or PDF
+- **🆕 Interactive Citations**: Clickable web source references with professional academic styling
 
 ### Advanced Processing Methods
 - **📄 Method 1 - Document Processing**: Upload/paste existing documents for intelligent restructuring
 - **🔍 Method 2 - AI Research Mode**: Enter research topics (max 20 words) for AI to research and generate comprehensive documents
 - **Radio Button Interface**: Clear method selection with auto-switching and field clearing
 
-### Intelligence Features  
+### Intelligence Features
 - **3-Tier AI Model Selection**: GPT-4o-mini (fast), Gemini Pro 2.5 (balanced), GPT-5 (advanced reasoning)
 - **3-Tier Verbosity Control**: Concise, Detailed, or Comprehensive output with different content depths
 - **AI-Powered Theme Detection**: Intelligent content analysis using GPT-4o for accurate theme categorization
 - **Enhanced Web Search**: 5 search results for research mode, 2 for document processing
+- **🆕 Smart Citations System**: Automatic generation of clickable source references with professional styling
 - **Connection Resilience**: 3-attempt retry logic with 60-second timeout for comprehensive processing
 
 ### User Experience
@@ -131,6 +133,7 @@ The application automatically detects content themes and applies appropriate sty
 | **Technology** | Blue (#007bff) | AI detects tech content, software, AI, digital systems |
 | **Health** | Pink (#e83e8c) | AI identifies medical, healthcare, wellness content |
 | **Automotive** | Orange (#fd7e14) | AI recognizes car brands, vehicle sales, transportation |
+| **🆕 Food** | Orange (#ff6b35) | AI detects recipes, cooking, cuisine, nutrition content |
 | **Default** | Gray (#6c757d) | Fallback for general content |
 
 ## 📊 Content Processing
@@ -150,6 +153,14 @@ The system uses carefully crafted prompts to:
 - **Print Optimization**: Special CSS for print media with scaled content
 - **Clean Interface**: Auto-hiding scrollbars, surgical gap adjustments, precise alignments
 - **Surface 5 Optimized**: Perfect 150% scale viewing without horizontal scrollbars
+
+### 🆕 Citations System
+- **Automatic Source Detection**: Captures web search results and converts them to citations
+- **Professional Academic Styling**: Numbered badges, clickable titles, descriptive snippets
+- **Theme-Adaptive Styling**: Citations match document theme colors for visual consistency
+- **Interactive Links**: Click citations to open source websites in new tabs
+- **Structured Format**: Clean academic-style layout with proper spacing and typography
+- **Always Generated**: Every document includes a citations section, even for general knowledge content
 
 ## 🔧 API Endpoints
 

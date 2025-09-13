@@ -52,7 +52,7 @@ def web_search(query, num_results=3):
         
         if response.status_code == 200:
             results = response.json().get('web', {}).get('results', [])
-            return [{'title': r.get('title', ''), 'snippet': r.get('description', '')} 
+            return [{'title': r.get('title', ''), 'snippet': r.get('description', ''), 'url': r.get('url', '')}
                    for r in results[:num_results]]
     except Exception as e:
         print(f"Web search error: {e}")
@@ -308,6 +308,71 @@ code {{
     margin: 0;
     font-family: Helvetica, Arial, sans-serif;
 }}
+.citations {{
+    margin: 20px 0;
+    padding: 16px;
+    background: {theme_color}0d;
+    border-left: 4px solid {theme_color};
+    border-radius: 0 8px 8px 0;
+}}
+.citations h3 {{
+    font-size: 14px;
+    font-weight: 600;
+    color: {theme_color};
+    margin: 0 0 12px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}}
+.citation {{
+    display: flex;
+    align-items: flex-start;
+    margin: 8px 0;
+    padding: 8px 0;
+    border-bottom: 1px solid {theme_color}20;
+}}
+.citation:last-child {{
+    border-bottom: none;
+}}
+.citation-number {{
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    background: {theme_color};
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 12px;
+    margin-top: 2px;
+}}
+.citation-content {{
+    flex-grow: 1;
+}}
+.citation-title {{
+    font-weight: 600;
+    color: {theme_color};
+    font-size: 14px;
+    line-height: 1.3;
+    margin: 0 0 4px 0;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s ease;
+}}
+.citation-title:hover {{
+    color: {theme_color};
+    text-decoration: underline;
+    transform: translateX(2px);
+}}
+.citation-snippet {{
+    color: #555;
+    font-size: 13px;
+    line-height: 1.4;
+    margin: 0;
+    font-style: italic;
+}}
 @media print {{
     body {{
         background: none;
@@ -333,6 +398,7 @@ THEME_COLORS = {
     "tech": "#007bff",
     "health": "#e83e8c",
     "auto": "#fd7e14",
+    "food": "#ff6b35",
     "default": "#6c757d"
 }
 
@@ -354,6 +420,7 @@ Available theme categories:
 - health: Medical topics, healthcare, wellness, pharmaceuticals, clinical research, diseases, treatments, hospitals, doctors, patients, therapy
 - tech: Technology, software, AI, digital systems, computing, programming, apps, platforms, internet, web development, data science
 - auto: Automotive industry, cars, vehicles, transportation, car brands, sales data, automotive manufacturing, driving, engines
+- food: Cooking, recipes, restaurants, cuisine, nutrition, ingredients, food preparation, culinary arts, dining, beverages, meal planning, kitchen tools
 - default: General topics, lifestyle, education, or content that doesn't clearly fit the specialized categories above
 
 Instructions:
@@ -362,7 +429,7 @@ Instructions:
 3. If the content spans multiple categories, choose the most dominant one
 4. Be specific - automotive content about car sales/popularity should be "auto", not "default"
 
-Respond with ONLY the theme category name: finance, health, tech, auto, or default"""
+Respond with ONLY the theme category name: finance, health, tech, auto, food, or default"""
 
         response = openai.chat.completions.create(
             model="gpt-4o",  # Use more powerful model for better accuracy
@@ -378,7 +445,7 @@ Respond with ONLY the theme category name: finance, health, tech, auto, or defau
         detected_theme = response.choices[0].message.content.strip().lower()
         
         # Validate the response is one of our supported themes
-        valid_themes = ["finance", "health", "tech", "auto", "default"]
+        valid_themes = ["finance", "health", "tech", "auto", "food", "default"]
         if detected_theme in valid_themes:
             print(f"DEBUG: AI detected theme: {detected_theme} for content: {text[:100]}...")
             return detected_theme
@@ -436,10 +503,10 @@ def process():
         print(f"DEBUG: AI Research - Found {len(search_results)} web search results")
         
         # Create research context
-        search_context = f"\n\nWeb Research Results for '{ai_topic}':\n"
+        search_context = f"\n\nWeb Research Results for '{ai_topic}' (USE THESE FOR CITATIONS):\n"
         if search_results:
             for i, result in enumerate(search_results, 1):
-                search_context += f"{i}. {result['title']}: {result['snippet']}\n"
+                search_context += f"[{i}] Title: {result['title']}\n    URL: {result['url']}\n    Snippet: {result['snippet']}\n\n"
         else:
             search_context += "No specific web results found. Use general knowledge.\n"
             
@@ -453,9 +520,9 @@ def process():
         
         search_context = ""
         if search_results:
-            search_context = f"\n\nAdditional Context from Web Search:\n"
+            search_context = f"\n\nAdditional Context from Web Search (USE THESE FOR CITATIONS):\n"
             for i, result in enumerate(search_results, 1):
-                search_context += f"{i}. {result['title']}: {result['snippet']}\n"
+                search_context += f"[{i}] Title: {result['title']}\n    URL: {result['url']}\n    Snippet: {result['snippet']}\n\n"
         
         processing_content = f"{input_text}{search_context}"
 
@@ -552,6 +619,24 @@ Create a professional document following this EXACT structure (like a medical/sc
 Final summary and key takeaways with bold formatting for emphasis.
 </p>
 
+<div class="citations">
+  <h3>Sources & References</h3>
+  <div class="citation">
+    <div class="citation-number">1</div>
+    <div class="citation-content">
+      <a href="https://example.com" class="citation-title" target="_blank">Source Title</a>
+      <div class="citation-snippet">Brief description of what was referenced from this source.</div>
+    </div>
+  </div>
+  <div class="citation">
+    <div class="citation-number">2</div>
+    <div class="citation-content">
+      <a href="https://example.com" class="citation-title" target="_blank">Another Source</a>
+      <div class="citation-snippet">Description of information used from this source.</div>
+    </div>
+  </div>
+</div>
+
 MANDATORY TABLE REQUIREMENTS:
 - EVERY document MUST contain at least 1-2 tables
 - Convert ANY structured information into tables:
@@ -577,9 +662,10 @@ Use this HTML structure for chronological events WITHIN content sections, NOT af
 
 DOCUMENT STRUCTURE ORDER:
 1. Main content sections with analysis
-2. Timeline (if applicable) within relevant content sections  
+2. Timeline (if applicable) within relevant content sections
 3. Tables and data analysis
-4. Summary section (ALWAYS LAST)
+4. Summary section
+5. Citations section (ALWAYS LAST - include ALL web search sources used)
 
 COMPREHENSIVE VERBOSITY EXTRA REQUIREMENTS:
 {f"- CREATE MULTIPLE SECTIONS (6+ sections minimum) with extensive analysis" if verbosity == "Comprehensive" else ""}
@@ -601,6 +687,14 @@ CRITICAL RULES:
 - Extract all numbers into stat boxes
 - CREATE TABLES FROM EVERYTHING POSSIBLE
 - Return ONLY HTML (no explanations, no backticks)
+
+CITATIONS REQUIREMENTS:
+- ALWAYS include a citations section at the end with ALL web search sources
+- Use the provided web search results to create accurate citations with REAL CLICKABLE LINKS
+- Each citation must have: numbered badge, <a href="ACTUAL_URL" class="citation-title" target="_blank">TITLE</a>, and snippet description
+- Use the exact URLs provided in the web search results
+- Number citations sequentially (1, 2, 3...)
+- If no web search results provided, create citations section anyway with note "No external sources used"
 
 Content to process:
 {processing_content}
