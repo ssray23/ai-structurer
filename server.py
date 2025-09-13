@@ -394,12 +394,12 @@ code {{
 }}"""
 
 THEME_COLORS = {
-    "finance": "#28a745",
-    "tech": "#007bff",
-    "health": "#e83e8c",
-    "auto": "#fd7e14",
-    "food": "#ff6b35",
-    "default": "#6c757d"
+    "finance": "#28a745",      # Green - money/growth
+    "tech": "#007bff",         # Blue - digital/innovation
+    "health": "#e83e8c",       # Pink - healthcare/wellness
+    "travel": "#dc3545",       # Red - movement/adventure
+    "food": "#fd7e14",         # Orange - warmth/appetite
+    "default": "#6c757d"       # Gray - neutral
 }
 
 @app.route("/")
@@ -419,7 +419,7 @@ Available theme categories:
 - finance: Banking, money, investments, economics, business finance, financial markets, accounting, budgets, costs, revenue, profits, loans, taxes
 - health: Medical topics, healthcare, wellness, pharmaceuticals, clinical research, diseases, treatments, hospitals, doctors, patients, therapy
 - tech: Technology, software, AI, digital systems, computing, programming, apps, platforms, internet, web development, data science
-- auto: Automotive industry, cars, vehicles, transportation, car brands, sales data, automotive manufacturing, driving, engines
+- travel: Transportation, travel, tourism, cars, flights, trains, buses, public transit, airlines, hotels, destinations, trip planning, vehicle rental, road trips, airports, travel guides, vacation planning
 - food: Cooking, recipes, restaurants, cuisine, nutrition, ingredients, food preparation, culinary arts, dining, beverages, meal planning, kitchen tools
 - default: General topics, lifestyle, education, or content that doesn't clearly fit the specialized categories above
 
@@ -427,9 +427,10 @@ Instructions:
 1. Focus on the PRIMARY subject matter, not just individual keywords
 2. Consider the overall context and purpose of the content
 3. If the content spans multiple categories, choose the most dominant one
-4. Be specific - automotive content about car sales/popularity should be "auto", not "default"
+4. Be specific - ALL transportation content (cars, flights, trains, tourism, vehicles) should be "travel", not "default"
+5. IMPORTANT: Car content, automotive reviews, vehicle comparisons = "travel" theme
 
-Respond with ONLY the theme category name: finance, health, tech, auto, food, or default"""
+Respond with ONLY the theme category name: finance, health, tech, travel, food, or default"""
 
         response = openai.chat.completions.create(
             model="gpt-4o",  # Use more powerful model for better accuracy
@@ -443,9 +444,9 @@ Respond with ONLY the theme category name: finance, health, tech, auto, food, or
         )
         
         detected_theme = response.choices[0].message.content.strip().lower()
-        
+
         # Validate the response is one of our supported themes
-        valid_themes = ["finance", "health", "tech", "auto", "food", "default"]
+        valid_themes = ["finance", "health", "tech", "travel", "food", "default"]
         if detected_theme in valid_themes:
             print(f"DEBUG: AI detected theme: {detected_theme} for content: {text[:100]}...")
             return detected_theme
@@ -575,7 +576,7 @@ def process():
     # Create verbosity-specific instructions
     verbosity_instructions = {
         "Concise": "Keep content brief and focused. Use 1-2 paragraphs per section, 2-3 stat boxes, and 1 small table. Prioritize key information only.",
-        "Detailed": "Provide balanced detail. Use 2-3 paragraphs per section, 3 stat boxes, and 1-2 comprehensive tables. Include supporting analysis.",
+        "Detailed": "Provide balanced detail. Use 2-3 paragraphs per section, 3 stat boxes, 1-2 comprehensive tables, and visual timelines when chronological data is present. Include supporting analysis.",
         "Comprehensive": "Provide EXTENSIVE analysis with maximum detail. REQUIREMENTS: 4-6 paragraphs per section, 6+ stat boxes, 3-4 detailed tables, visual timelines (when applicable), comparison tables, market analysis, trend data, future projections, case studies, and deep contextual insights. Make the document comprehensive like a research report."
     }
     
@@ -715,7 +716,7 @@ DOCUMENT STRUCTURE ORDER:
 
 COMPREHENSIVE VERBOSITY EXTRA REQUIREMENTS:
 {f"- CREATE MULTIPLE SECTIONS (6+ sections minimum) with extensive analysis" if verbosity == "Comprehensive" else ""}
-{f"- ADD VISUAL TIMELINE with dates/milestones (use timeline HTML structure)" if verbosity == "Comprehensive" else ""}
+{f"- ADD VISUAL TIMELINE with dates/milestones (use timeline HTML structure)" if verbosity in ["Detailed", "Comprehensive"] else ""}
 {f"- CREATE COMPARISON TABLES (before/after, competitor analysis, etc.)" if verbosity == "Comprehensive" else ""}
 {f"- INCLUDE MARKET ANALYSIS section with industry data" if verbosity == "Comprehensive" else ""}
 {f"- ADD FUTURE PROJECTIONS/TRENDS section" if verbosity == "Comprehensive" else ""}

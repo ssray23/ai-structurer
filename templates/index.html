@@ -585,7 +585,12 @@ document.getElementById("process-btn").addEventListener("click", async () => {
     // Clear any existing stats immediately when starting processing
     const existingStats = document.getElementById("processing-stats");
     if(existingStats) existingStats.remove();
-    
+
+    // Hide theme indicator during processing to avoid empty pill
+    document.getElementById("theme-indicator").style.display = "none";
+    document.getElementById("theme-text").textContent = "";
+    document.getElementById("theme-indicator").className = "theme-indicator";
+
     // Show "Calculating..." in the stats section (left side)
     const statsDiv = document.createElement("div");
     statsDiv.id = "processing-stats";
@@ -636,8 +641,9 @@ document.getElementById("process-btn").addEventListener("click", async () => {
                 const themeDisplay = document.getElementById("theme-display");
                 const themeIndicator = document.getElementById("theme-indicator");
                 const themeText = document.getElementById("theme-text");
-                
+
                 themeDisplay.style.display = "block";
+                themeIndicator.style.display = "block";  // Show theme indicator again
                 themeIndicator.style.backgroundColor = data.theme_color;
                 themeText.textContent = `Theme Detected: ${data.theme.charAt(0).toUpperCase() + data.theme.slice(1)}`;
             }

@@ -6,7 +6,7 @@ Transform any unstructured text into beautifully formatted A4 documents with AI-
 
 ### Core Functionality
 - **AI-Powered Document Structuring**: Uses OpenAI GPT models to intelligently structure content
-- **Dynamic Theme Detection**: Enhanced detection for finance, tech, health, auto, and **food** themes with comprehensive keyword matching
+- **Dynamic Theme Detection**: Enhanced detection for finance, tech, health, **travel**, and **food** themes with comprehensive keyword matching
 - **A4-Formatted Output**: Professional document formatting optimized for printing with full width display
 - **Real-Time Preview**: See your formatted document instantly in the browser with exact download formatting
 - **Multiple Export Options**: Download as HTML or PDF
@@ -19,7 +19,7 @@ Transform any unstructured text into beautifully formatted A4 documents with AI-
 
 ### Intelligence Features
 - **3-Tier AI Model Selection**: GPT-4o-mini (fast), Gemini Pro 2.5 (balanced), GPT-5 (advanced reasoning)
-- **3-Tier Verbosity Control**: Concise, Detailed, or Comprehensive output with different content depths
+- **🆕 Enhanced Verbosity Control**: Concise, Detailed (with timelines), or Comprehensive output with different content depths
 - **AI-Powered Theme Detection**: Intelligent content analysis using GPT-4o for accurate theme categorization
 - **🆕 AI-Powered Search Queries**: Intelligent web search using AI to generate contextually relevant queries instead of random keywords
 - **🆕 Smart Citations System**: Automatic generation of clickable source references with professional styling
@@ -27,6 +27,7 @@ Transform any unstructured text into beautifully formatted A4 documents with AI-
 
 ### User Experience
 - **Responsive Split-Screen**: 48/52 layout optimized for Surface 5 laptop at 150% scale
+- **🆕 Clean Processing Interface**: Theme indicator and visual elements hidden during processing to eliminate confusion
 - **Auto-Hide Scrollbars**: Clean interface with scrollbars appearing only on hover
 - **Animated Gradient Branding**: Beautiful rainbow gradient title with smooth color transitions
 - **Real-Time Word Counter**: 20-word limit enforcement with color-coded feedback
@@ -132,8 +133,8 @@ The application automatically detects content themes and applies appropriate sty
 | **Finance** | Green (#28a745) | AI analyzes content for financial topics, investments, economics |
 | **Technology** | Blue (#007bff) | AI detects tech content, software, AI, digital systems |
 | **Health** | Pink (#e83e8c) | AI identifies medical, healthcare, wellness content |
-| **Automotive** | Orange (#fd7e14) | AI recognizes car brands, vehicle sales, transportation |
-| **🆕 Food** | Orange (#ff6b35) | AI detects recipes, cooking, cuisine, nutrition content |
+| **🆕 Travel** | Red (#dc3545) | AI recognizes transportation, tourism, flights, hotels, destinations, trip planning, vehicles, automotive content |
+| **🆕 Food** | Orange (#fd7e14) | AI detects recipes, cooking, cuisine, nutrition content |
 | **Default** | Gray (#6c757d) | Fallback for general content |
 
 ## 📊 Content Processing
@@ -163,6 +164,7 @@ The system uses carefully crafted prompts to:
   - Banking document → `"commercial property lease legal guidelines India"`
   - Recipe content → `"peanut butter noodle cooking techniques"`
   - Tech article → `"software development best practices"`
+  - Travel content → `"flight booking travel tips destinations"`
 - **Robust Fallback**: If AI fails, intelligent word extraction creates relevant backup queries
 - **Universal Adaptability**: Works with ANY content type - no hardcoded categories needed
 
