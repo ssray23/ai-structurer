@@ -357,7 +357,7 @@ textarea {
       <!-- Method Selection -->
       <div style="margin-bottom: 20px; text-align: center;">
         <div style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">Choose Processing Method:</div>
-        <div style="display: flex; justify-content: center; gap: 30px;">
+        <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
           <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
             <input type="radio" name="processing-method" id="method-document" value="document" checked style="transform: scale(1.2);">
             <span style="font-weight: 500;">📄 Process Document</span>
@@ -365,6 +365,10 @@ textarea {
           <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
             <input type="radio" name="processing-method" id="method-research" value="research" style="transform: scale(1.2);">
             <span style="font-weight: 500;">🔍 AI Research</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <input type="radio" name="processing-method" id="method-url" value="url" style="transform: scale(1.2);">
+            <span style="font-weight: 500;">🌐 Extract from URL</span>
           </label>
         </div>
       </div>
@@ -389,13 +393,22 @@ textarea {
         </div>
       </div>
 
+      <div class="method-section" id="url-method" style="border: 2px dashed #28a745; display: none;">
+        <div class="method-title"><strong>Method 3:</strong> Extract Article from URL</div>
+        <div class="section-desc">Enter a URL to extract and structure the article content</div>
+        <input type="url" id="article-url" placeholder="https://example.com/article-to-extract" style="width: 100%; max-width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 10px; box-sizing: border-box;" disabled>
+        <div style="font-size: 12px; color: #666; margin-bottom: 15px;">
+          ✨ Supports news articles, blog posts, and most web content with readable text
+        </div>
+      </div>
+
       <div class="controls-section">
         <div class="tolerance-control">
           <div class="tolerance-label">
             🧠 AI Model: <span id="model-display">GPT-5</span>
           </div>
           <div class="tolerance-desc">
-            Choose your AI model: GPT-4o-mini (fast), Gemini Pro 2.5 (balanced), or GPT-5 (advanced reasoning).
+            Choose your AI model: GPT-4o-mini (fast), Gemini Pro 2.5 (comprehensive), or GPT-5 (editorial selectivity).
           </div>
           <div class="slider-container">
             <input type="range" min="0" max="2" value="2" class="slider" id="model-slider" step="1">
@@ -436,7 +449,7 @@ textarea {
 
       <div class="tips-section">
         <h4>📋 Processing Settings:</h4>
-        <p>For perfect results, set processing intelligence to "Advanced". Uses GPT-5 reasoning with web search integration.</p>
+        <p>For complete data extraction, use "Gemini Pro 2.5" with "Comprehensive" verbosity. For curated highlights, use "GPT-5 Advanced" reasoning.</p>
         <h4>💡 Best Quality:</h4>
         <p>Use "Download HTML" for direct file generation that captures your perfect document structure exactly as processed!</p>
       </div>
@@ -482,30 +495,50 @@ verbositySlider.addEventListener("input", (e) => {
 // Method selection radio buttons
 const methodDocumentRadio = document.getElementById("method-document");
 const methodResearchRadio = document.getElementById("method-research");
+const methodUrlRadio = document.getElementById("method-url");
 const documentMethodSection = document.getElementById("document-method");
 const researchMethodSection = document.getElementById("research-method");
+const urlMethodSection = document.getElementById("url-method");
 const inputTextarea = document.getElementById("input-text");
 const aiTopicTextarea = document.getElementById("ai-topic");
+const articleUrlInput = document.getElementById("article-url");
 
 function updateMethodVisibility() {
     if (methodDocumentRadio.checked) {
         documentMethodSection.style.display = "block";
         researchMethodSection.style.display = "none";
+        urlMethodSection.style.display = "none";
         inputTextarea.disabled = false;
         aiTopicTextarea.disabled = true;
+        articleUrlInput.disabled = true;
         aiTopicTextarea.value = ""; // Clear research topic
+        articleUrlInput.value = ""; // Clear URL
         document.getElementById("word-count").textContent = "0";
-    } else {
+    } else if (methodResearchRadio.checked) {
         documentMethodSection.style.display = "none";
         researchMethodSection.style.display = "block";
+        urlMethodSection.style.display = "none";
         inputTextarea.disabled = true;
         aiTopicTextarea.disabled = false;
+        articleUrlInput.disabled = true;
         inputTextarea.value = ""; // Clear document text
+        articleUrlInput.value = ""; // Clear URL
+    } else if (methodUrlRadio.checked) {
+        documentMethodSection.style.display = "none";
+        researchMethodSection.style.display = "none";
+        urlMethodSection.style.display = "block";
+        inputTextarea.disabled = true;
+        aiTopicTextarea.disabled = true;
+        articleUrlInput.disabled = false;
+        inputTextarea.value = ""; // Clear document text
+        aiTopicTextarea.value = ""; // Clear research topic
+        document.getElementById("word-count").textContent = "0";
     }
 }
 
 methodDocumentRadio.addEventListener("change", updateMethodVisibility);
 methodResearchRadio.addEventListener("change", updateMethodVisibility);
+methodUrlRadio.addEventListener("change", updateMethodVisibility);
 
 // AI Topic word counter
 const wordCountDisplay = document.getElementById("word-count");
@@ -558,16 +591,24 @@ document.getElementById("file-input").addEventListener("change", async (e) => {
 // Process document
 document.getElementById("process-btn").addEventListener("click", async () => {
     const isDocumentMethod = document.getElementById("method-document").checked;
+    const isResearchMethod = document.getElementById("method-research").checked;
+    const isUrlMethod = document.getElementById("method-url").checked;
     const text = document.getElementById("input-text").value.trim();
     const aiTopic = document.getElementById("ai-topic").value.trim();
-    
-    if(isDocumentMethod && !text) { 
-        alert("Please enter or upload document text in Method 1!"); 
-        return; 
+    const articleUrl = document.getElementById("article-url").value.trim();
+
+    if(isDocumentMethod && !text) {
+        alert("Please enter or upload document text in Method 1!");
+        return;
     }
-    
-    if(!isDocumentMethod && !aiTopic) {
+
+    if(isResearchMethod && !aiTopic) {
         alert("Please enter a research topic in Method 2!");
+        return;
+    }
+
+    if(isUrlMethod && !articleUrl) {
+        alert("Please enter a URL to extract content from in Method 3!");
         return;
     }
 
@@ -599,9 +640,14 @@ document.getElementById("process-btn").addEventListener("click", async () => {
     document.getElementById("theme-display").appendChild(statsDiv);
     document.getElementById("theme-display").style.display = "block";
     
-    const processingText = isDocumentMethod ? 
-        `Processing document with ${selectedModel}...` : 
-        `Researching "${aiTopic}" with ${selectedModel}...`;
+    let processingText;
+    if (isDocumentMethod) {
+        processingText = `Processing document with ${selectedModel}...`;
+    } else if (isResearchMethod) {
+        processingText = `Researching "${aiTopic}" with ${selectedModel}...`;
+    } else if (isUrlMethod) {
+        processingText = `Extracting and structuring article with ${selectedModel}...`;
+    }
     
     outputDiv.innerHTML = `<div style='padding: 40px; text-align: center; color: #666;'>
         <div style='font-size: 18px; margin-bottom: 10px;'>${processingText}</div>
@@ -610,7 +656,8 @@ document.getElementById("process-btn").addEventListener("click", async () => {
     try {
         const requestData = {
             text: isDocumentMethod ? text : "",
-            aiTopic: isDocumentMethod ? "" : aiTopic,
+            aiTopic: isResearchMethod ? aiTopic : "",
+            articleUrl: isUrlMethod ? articleUrl : "",
             model: selectedModel,
             verbosity: selectedVerbosity
         };
@@ -708,7 +755,9 @@ ${currentDocumentHtml}
 });
 
 // Download PDF
-document.getElementById("download-pdf-btn").addEventListener("click", () => {
+const downloadPdfBtn = document.getElementById("download-pdf-btn");
+if (downloadPdfBtn) {
+    downloadPdfBtn.addEventListener("click", () => {
     const output = document.getElementById("output");
     if(!output.innerHTML.trim()) { alert("Nothing to download!"); return; }
     if(!window.html2pdf) {
@@ -719,7 +768,8 @@ document.getElementById("download-pdf-btn").addEventListener("click", () => {
     } else {
         html2pdf().set({margin:0.6, filename:'structured_document.pdf', image:{type:'jpeg', quality:0.98}, html2canvas:{scale:2}, jsPDF:{unit:'in', format:'a4', orientation:'portrait'}}).from(output).save();
     }
-});
+    });
+}
 </script>
 </body>
 </html>

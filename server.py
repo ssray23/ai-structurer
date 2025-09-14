@@ -5,6 +5,9 @@ import requests
 import json
 from openai import OpenAIError
 from config import get_config
+from newspaper import Article
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin, urlparse
 
 app = Flask(__name__)
 
@@ -58,6 +61,84 @@ def web_search(query, num_results=3):
         print(f"Web search error: {e}")
     
     return []
+
+def extract_article_content(url):
+    """Extract article content from URL using multiple methods"""
+    try:
+        # Method 1: Try newspaper3k first (best for news articles)
+        try:
+            article = Article(url)
+            article.download()
+            article.parse()
+
+            if article.text and len(article.text.strip()) > 200:
+                return {
+                    'title': article.title or 'Article',
+                    'text': article.text.strip(),
+                    'author': getattr(article, 'authors', []),
+                    'publish_date': str(article.publish_date) if article.publish_date else None,
+                    'method': 'newspaper3k'
+                }
+        except Exception as e:
+            print(f"Newspaper3k extraction failed: {e}")
+
+        # Method 2: Fallback to BeautifulSoup for general web content
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        # Remove script and style elements
+        for script in soup(["script", "style", "nav", "footer", "header", "aside"]):
+            script.decompose()
+
+        # Try to find main content areas
+        content_selectors = [
+            'article', 'main', '.content', '.post-content', '.entry-content',
+            '.article-content', '.post-body', '.story-body', '.article-body'
+        ]
+
+        content_text = ""
+        title = ""
+
+        # Extract title
+        title_tag = soup.find('title')
+        if title_tag:
+            title = title_tag.get_text().strip()
+
+        # Try to find content using selectors
+        for selector in content_selectors:
+            elements = soup.select(selector)
+            if elements:
+                for element in elements:
+                    text = element.get_text(separator=' ', strip=True)
+                    if len(text) > len(content_text):
+                        content_text = text
+                break
+
+        # If no specific content found, get all paragraphs
+        if not content_text:
+            paragraphs = soup.find_all('p')
+            content_text = ' '.join([p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True)])
+
+        if content_text and len(content_text.strip()) > 200:
+            return {
+                'title': title or 'Web Article',
+                'text': content_text.strip(),
+                'author': [],
+                'publish_date': None,
+                'method': 'beautifulsoup'
+            }
+
+        return None
+
+    except Exception as e:
+        print(f"Article extraction error for {url}: {e}")
+        return None
 
 A4_CSS_TEMPLATE = """.a4 {{
     width: 21cm;
@@ -525,13 +606,26 @@ def process():
     data = request.json
     input_text = data.get("text", "").strip()
     ai_topic = data.get("aiTopic", "").strip()
+    article_url = data.get("articleUrl", "").strip()
     selected_model = data.get("model", "GPT-5")
     verbosity = data.get("verbosity", "Detailed")
-    
-    if not input_text and not ai_topic:
-        return jsonify({"error": "No input text or AI topic provided."})
-    
-    # Determine processing mode
+
+    if not input_text and not ai_topic and not article_url:
+        return jsonify({"error": "No input text, AI topic, or URL provided."})
+
+    # Handle URL extraction first if provided
+    if article_url:
+        print(f"DEBUG: Extracting article from URL: {article_url}")
+        article_data = extract_article_content(article_url)
+        if not article_data:
+            return jsonify({"error": "Failed to extract content from the provided URL. Please check the URL and try again."})
+
+        input_text = f"Article: {article_data['title']}\n\n{article_data['text']}"
+        print(f"DEBUG: Successfully extracted {len(input_text)} characters from URL")
+        print(f"DEBUG: Article title: {article_data['title']}")
+        print(f"DEBUG: Content preview: {input_text[:500]}...")
+
+    # Determine processing mode (URL extraction is treated as document processing)
     is_ai_research = bool(ai_topic and not input_text)
     processing_text = ai_topic if is_ai_research else input_text
     
@@ -541,6 +635,7 @@ def process():
     print(f"DEBUG: Processing mode: {'AI Research' if is_ai_research else 'Document Processing'}")
     print(f"DEBUG: Detected theme: {theme}, color: {theme_color}")
     print(f"DEBUG: Selected model: {selected_model}, Verbosity: {verbosity}")
+    print(f"DEBUG: Input text length: {len(processing_text)} characters")
 
     # Handle AI Research vs Document Processing
     if is_ai_research:
@@ -594,8 +689,14 @@ Verbosity Level: {verbosity} - {verbosity_instructions[verbosity]}
         content_instruction = f"""
 DOCUMENT PROCESSING MODE: Structure and enhance the provided text content.
 
-Use the original text as the foundation and enhance it with proper formatting and organization.
-Add relevant context from web search results where applicable.
+CRITICAL INSTRUCTIONS - FOLLOW EXACTLY:
+- PRESERVE EVERY DETAIL from the source content - do not summarize or omit ANY information
+- STRUCTURE EVERY numbered/bulleted list into comprehensive HTML tables
+- INCLUDE ALL items from source lists - if source has 16 items, your table MUST have 16 rows
+- NEVER select highlights or examples - include COMPLETE lists with ALL entries
+- EXPAND on details rather than condensing them
+- ADD relevant context from web search results where applicable
+- This is DOCUMENT PROCESSING, not summarization - maintain ALL original content
 
 Verbosity Level: {verbosity} - {verbosity_instructions[verbosity]}
 """
@@ -694,6 +795,8 @@ MANDATORY TABLE REQUIREMENTS:
   • Key-value pairs → data table
   • Timeline events → visual timeline (NOT table)
 - Even simple bullet points MUST become tables with headers like "Item", "Description", "Details"
+- INCLUDE ALL numbered/bulleted items from the source - do NOT select only a few examples
+- If there are N items in a list, create tables with ALL N items, not just highlights or summaries
 
 TIMELINE STRUCTURE (when events/dates are present):
 Use this HTML structure for chronological events WITHIN content sections, NOT after summary:
@@ -764,6 +867,9 @@ Content to process:
                 # Set max tokens based on verbosity and environment
                 max_tokens = MAX_TOKENS_CONFIG.get(verbosity, MAX_TOKENS_CONFIG["Detailed"])
                 
+                print(f"DEBUG: Using {max_tokens} tokens for {verbosity} mode with {actual_model}")
+                print(f"DEBUG: Prompt length: {len(prompt)} characters")
+
                 response = openai.chat.completions.create(
                     model=actual_model,
                     messages=[
@@ -773,6 +879,9 @@ Content to process:
                     max_tokens=max_tokens,
                     timeout=API_TIMEOUT
                 )
+
+                print(f"DEBUG: Response tokens used: {response.usage.total_tokens if response.usage else 'Unknown'}")
+                print(f"DEBUG: Output length: {len(response.choices[0].message.content)} characters")
                 break  # Success, exit retry loop
             except Exception as e:
                 print(f"DEBUG: Attempt {attempt + 1} failed: {str(e)}")

@@ -15,10 +15,11 @@ Transform any unstructured text into beautifully formatted A4 documents with AI-
 ### Advanced Processing Methods
 - **📄 Method 1 - Document Processing**: Upload/paste existing documents for intelligent restructuring
 - **🔍 Method 2 - AI Research Mode**: Enter research topics (max 20 words) for AI to research and generate comprehensive documents
+- **🌐 Method 3 - URL Article Extraction**: Extract and structure content from any web article or blog post
 - **Radio Button Interface**: Clear method selection with auto-switching and field clearing
 
 ### Intelligence Features
-- **3-Tier AI Model Selection**: GPT-4o-mini (fast), Gemini Pro 2.5 (balanced), GPT-5 (advanced reasoning)
+- **3-Tier AI Model Selection**: GPT-4o-mini (fast), Gemini Pro 2.5 (comprehensive), GPT-5 (editorial selectivity)
 - **🆕 Enhanced Verbosity Control**: Concise, Detailed (with timelines), or Comprehensive output with different content depths
 - **AI-Powered Theme Detection**: Intelligent content analysis using GPT-4o for accurate theme categorization
 - **🆕 AI-Powered Search Queries**: Intelligent web search using AI to generate contextually relevant queries instead of random keywords
@@ -55,8 +56,71 @@ templates/index.html
 ```
 
 ### AI Processing Flow
+
 ```
-1. Text Input → 2. Theme Detection → 3. AI Structuring → 4. CSS Styling → 5. A4 Document
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                              Input Processing Pipeline                                   │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+                                         │
+        ┌────────────────────────────────┼────────────────────────────────┐
+        │                                │                                │
+        ▼                                ▼                                ▼
+┌─────────────────┐              ┌─────────────────┐              ┌─────────────────┐
+│   📄 Method 1   │              │   🔍 Method 2   │              │   🌐 Method 3   │
+│   Document      │              │   AI Research   │              │   URL Extract   │
+│   Processing    │              │                 │              │                 │
+└─────────────────┘              └─────────────────┘              └─────────────────┘
+        │                                │                                │
+        │ Direct text input              │ Topic keywords                 │ Web URL
+        │                                │                                │
+        ▼                                ▼                                ▼
+┌─────────────────┐              ┌─────────────────┐              ┌─────────────────┐
+│ Raw Text        │              │ Web Search      │              │ Article         │
+│ Processing      │              │ (5 results)     │              │ Extraction      │
+│                 │              │                 │              │ (newspaper3k +  │
+│                 │              │                 │              │  BeautifulSoup) │
+└─────────────────┘              └─────────────────┘              └─────────────────┘
+        │                                │                                │
+        └────────────────────────────────┼────────────────────────────────┘
+                                         │
+                                         ▼
+                            ┌─────────────────────────┐
+                            │    🎨 Theme Detection   │
+                            │     (GPT-4o Analysis)   │
+                            │  Finance │ Tech │ Health │
+                            │  Travel │ Food │ Default │
+                            └─────────────────────────┘
+                                         │
+                                         ▼
+                            ┌─────────────────────────┐
+                            │   🤖 AI Model Processing│
+                            │                         │
+                            │ • GPT-4o-mini (fast)    │
+                            │ • Gemini Pro 2.5        │
+                            │   (comprehensive)       │
+                            │ • GPT-5 (editorial      │
+                            │   selectivity)          │
+                            └─────────────────────────┘
+                                         │
+                                         ▼
+                            ┌─────────────────────────┐
+                            │  📊 Content Structuring │
+                            │                         │
+                            │ • Tables & Data Grids   │
+                            │ • Fact Boxes & Stats    │
+                            │ • Timelines & Charts    │
+                            │ • Professional Styling  │
+                            └─────────────────────────┘
+                                         │
+                                         ▼
+                            ┌─────────────────────────┐
+                            │   📄 A4 Document Output │
+                            │                         │
+                            │ • Theme-based styling   │
+                            │ • Print-ready format    │
+                            │ • Interactive citations │
+                            │ • Download HTML/PDF     │
+                            └─────────────────────────┘
 ```
 
 ## 🎯 How It Works
@@ -92,6 +156,22 @@ devices over 3 years old. The Pro models have larger camera islands.
    - Future projections
    - Case studies and examples
 
+### Example 3: URL Article Extraction (Method 3) 🆕
+
+**URL Input:**
+```
+https://www.theholidaystory.com/durga-puja-in-london/
+```
+
+**Article Extraction Steps:**
+1. **Content Extraction**: Uses newspaper3k + BeautifulSoup for robust article parsing
+2. **Full Content Capture**: Extracts title, body text, and structured data (20,060+ characters)
+3. **Comprehensive Processing**: AI structures ALL content (16+ bullet points → complete tables)
+4. **Model Behavior Differences**:
+   - **Gemini Pro 2.5 (comprehensive)**: Creates tables with ALL 16 events/items
+   - **GPT-5 (editorial selectivity)**: Curates 3-6 key highlights intelligently
+5. **Professional Output**: Theme-based styling with complete event details, dates, locations
+
 **Output Features:**
 - **Verbosity Control**: Concise (brief overview) → Comprehensive (research paper depth)
 - **Dynamic Themes**: Health theme (pink) for cancer research, Tech theme (blue) for AI topics
@@ -111,7 +191,7 @@ git clone https://github.com/ssray23/ai-structurer.git
 cd ai-structurer
 
 # Install dependencies
-pip install flask openai python-dotenv
+pip install flask openai python-dotenv newspaper3k beautifulsoup4 lxml
 
 # Create environment file
 echo "OPENAI_API_KEY=your_api_key_here" > .env
@@ -196,7 +276,19 @@ Processes text input or research topics and returns structured HTML document.
 {
   "text": "",
   "aiTopic": "role of AI in cancer research",
-  "model": "GPT-5", 
+  "articleUrl": "",
+  "model": "GPT-5",
+  "verbosity": "Comprehensive"
+}
+```
+
+**Request (URL Article Extraction):**
+```json
+{
+  "text": "",
+  "aiTopic": "",
+  "articleUrl": "https://example.com/article-url",
+  "model": "Gemini Pro 2.5",
   "verbosity": "Comprehensive"
 }
 ```
@@ -229,6 +321,16 @@ Processes text input or research topics and returns structured HTML document.
 - **Educational Content**: Generate structured learning materials on any subject
 - **Competitive Intelligence**: Research and analyze competitor landscapes
 - **Policy Briefs**: Create government or organizational policy documents
+
+### URL Article Extraction (Method 3) 🆕
+- **News Article Analysis**: Extract and structure breaking news content
+- **Blog Post Curation**: Transform blog articles into professional documents
+- **Event Listings**: Structure event details from websites into organized tables
+- **Product Reviews**: Extract and organize product comparison data
+- **Research Paper Summaries**: Structure academic articles and findings
+- **Travel Guides**: Extract destination information into structured itineraries
+- **Recipe Collections**: Organize cooking instructions and ingredient lists
+- **Tutorial Consolidation**: Structure how-to guides and instructional content
 
 ## 🛡️ Environment Variables
 
