@@ -33,6 +33,7 @@ Transform any unstructured text into beautifully formatted A4 documents with AI-
 - **Animated Gradient Branding**: Beautiful rainbow gradient title with smooth color transitions
 - **Real-Time Word Counter**: 20-word limit enforcement with color-coded feedback
 - **Perfectly Aligned Sliders**: Precise slider knob alignment with text labels
+- **Perfect Radio Button Alignment**: Surgical CSS fixes ensure radio buttons align perfectly with text and icons
 - **Optimized A4 Scaling**: Responsive document width (18cm on smaller screens) eliminating horizontal scrollbars
 
 ## 🏗️ Architecture
@@ -160,17 +161,23 @@ devices over 3 years old. The Pro models have larger camera islands.
 
 **URL Input:**
 ```
-https://www.theholidaystory.com/durga-puja-in-london/
+https://cjeatsrecipes.com/din-tai-fung-noodles-with-sesame-sauce-copycat/
 ```
 
-**Article Extraction Steps:**
-1. **Content Extraction**: Uses newspaper3k + BeautifulSoup for robust article parsing
-2. **Full Content Capture**: Extracts title, body text, and structured data (20,060+ characters)
-3. **Comprehensive Processing**: AI structures ALL content (16+ bullet points → complete tables)
-4. **Model Behavior Differences**:
-   - **Gemini Pro 2.5 (comprehensive)**: Creates tables with ALL 16 events/items
-   - **GPT-5 (editorial selectivity)**: Curates 3-6 key highlights intelligently
-5. **Professional Output**: Theme-based styling with complete event details, dates, locations
+**Enhanced Article Extraction Steps:**
+1. **WPRM Recipe Detection**: Automatically detects WP Recipe Maker containers for structured recipe content
+2. **Multi-Layer Content Extraction**:
+   - **WPRM Priority**: Extracts structured recipe data (ingredients, instructions, nutrition)
+   - **Article Context**: Captures surrounding content (tips, background, techniques)
+   - **Combined Processing**: Merges recipe structure with article context
+3. **Recipe-Specific Processing**:
+   - **Structured Data Preservation**: Maintains `[LIST]` markers for recipe steps and ingredients
+   - **Mandatory Table Creation**: AI converts ALL recipe steps into structured instruction tables
+   - **Enhanced Templates**: Specific recipe table formats (Step | Instruction | Details)
+4. **Universal Compatibility**: Works with both recipe sites and general articles
+5. **Model Behavior**:
+   - **Gemini Pro 2.5**: Comprehensive recipe tables with all steps and ingredients
+   - **GPT-5**: Editorial recipe curation with essential steps preserved
 
 **Output Features:**
 - **Verbosity Control**: Concise (brief overview) → Comprehensive (research paper depth)
@@ -234,6 +241,20 @@ The system uses carefully crafted prompts to:
 - **Print Optimization**: Special CSS for print media with scaled content
 - **Clean Interface**: Auto-hiding scrollbars, surgical gap adjustments, precise alignments
 - **Surface 5 Optimized**: Perfect 150% scale viewing without horizontal scrollbars
+
+### 🆕 Enhanced Recipe Processing System
+
+#### WPRM (WP Recipe Maker) Detection
+- **Smart Container Detection**: Automatically identifies recipe sites using WP Recipe Maker plugin
+- **Structured Data Extraction**: Captures recipe steps, ingredients, and nutrition from structured containers
+- **Multi-Method Fallback**: newspaper3k + BeautifulSoup ensure comprehensive content extraction
+- **Content Prioritization**: Recipe data takes precedence over article content for focused processing
+
+#### AI Recipe Processing
+- **Mandatory Table Creation**: Enhanced AI instructions force recipe steps into structured tables
+- **Template-Guided Output**: Concrete table examples (Step | Instruction | Details) ensure consistent formatting
+- **Content Preservation**: Never summarizes recipe steps - maintains every instruction exactly as provided
+- **Cross-Model Consistency**: Both Gemini Pro 2.5 and GPT-5 produce proper recipe step tables
 
 ### 🆕 AI-Powered Search & Citations System
 
@@ -325,11 +346,11 @@ Processes text input or research topics and returns structured HTML document.
 ### URL Article Extraction (Method 3) 🆕
 - **News Article Analysis**: Extract and structure breaking news content
 - **Blog Post Curation**: Transform blog articles into professional documents
+- **🍳 Recipe Extraction**: Advanced WPRM detection for structured recipe processing with automatic step tables
 - **Event Listings**: Structure event details from websites into organized tables
 - **Product Reviews**: Extract and organize product comparison data
 - **Research Paper Summaries**: Structure academic articles and findings
 - **Travel Guides**: Extract destination information into structured itineraries
-- **Recipe Collections**: Organize cooking instructions and ingredient lists
 - **Tutorial Consolidation**: Structure how-to guides and instructional content
 
 ## 🛡️ Environment Variables

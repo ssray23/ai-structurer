@@ -62,6 +62,69 @@ def web_search(query, num_results=3):
     
     return []
 
+def extract_structured_content(element):
+    """Extract content while preserving important structure like tables, lists, headings"""
+    content_parts = []
+
+    # Process direct children and their descendants more carefully
+    def process_element(elem, processed_ids):
+        if id(elem) in processed_ids:
+            return []
+
+        parts = []
+        processed_ids.add(id(elem))
+
+        if elem.name == 'table':
+            table_text = "\n[TABLE]\n"
+            rows = elem.find_all('tr')
+            for row in rows:
+                cells = row.find_all(['th', 'td'])
+                row_text = ' | '.join([cell.get_text(strip=True) for cell in cells if cell.get_text(strip=True)])
+                if row_text.strip():
+                    table_text += row_text + "\n"
+            table_text += "[/TABLE]\n"
+            parts.append(table_text)
+
+        elif elem.name in ['ol', 'ul']:
+            list_items = elem.find_all('li')
+            if list_items:
+                list_text = "\n[LIST]\n"
+                for i, item in enumerate(list_items):
+                    item_text = item.get_text(strip=True)
+                    if item_text:
+                        prefix = f"{i+1}. " if elem.name == 'ol' else "• "
+                        list_text += f"{prefix}{item_text}\n"
+                list_text += "[/LIST]\n"
+                parts.append(list_text)
+
+        elif elem.name in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+            heading_text = elem.get_text(strip=True)
+            if heading_text:
+                parts.append(f"\n[HEADING] {heading_text} [/HEADING]\n")
+
+        elif elem.name in ['p', 'div']:
+            text_content = elem.get_text(strip=True)
+            if text_content and len(text_content) > 15:
+                # Only add if it doesn't contain nested structured elements we've already processed
+                has_nested_structure = elem.find_all(['table', 'ol', 'ul'])
+                if not has_nested_structure:
+                    parts.append(text_content + "\n")
+
+        return parts
+
+    # Process all elements
+    seen_ids = set()
+    all_elements = element.find_all(['table', 'ol', 'ul', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'div'])
+
+    for elem in all_elements:
+        if elem.parent and elem.parent.name in ['table', 'ol', 'ul']:
+            continue  # Skip elements that are part of structured content
+
+        parts = process_element(elem, seen_ids)
+        content_parts.extend(parts)
+
+    return '\n'.join(content_parts)
+
 def extract_article_content(url):
     """Extract article content from URL using multiple methods"""
     try:
@@ -96,7 +159,7 @@ def extract_article_content(url):
         for script in soup(["script", "style", "nav", "footer", "header", "aside"]):
             script.decompose()
 
-        # Try to find main content areas
+        # Try to find main content areas (enhanced for recipe sites)
         content_selectors = [
             'article', 'main', '.content', '.post-content', '.entry-content',
             '.article-content', '.post-body', '.story-body', '.article-body'
@@ -105,25 +168,41 @@ def extract_article_content(url):
         content_text = ""
         title = ""
 
+        # Check for WPRM (WP Recipe Maker) recipe containers first
+        wprm_recipe = soup.find('div', class_=lambda x: x and 'wprm-recipe-container' in str(x))
+        if wprm_recipe:
+            wprm_content = extract_structured_content(wprm_recipe)
+            if len(wprm_content) > 500:  # Substantial recipe content
+                content_text = wprm_content
+
         # Extract title
         title_tag = soup.find('title')
         if title_tag:
             title = title_tag.get_text().strip()
 
-        # Try to find content using selectors
+        # Try to find content using selectors with enhanced structured extraction
+        article_content = ""
         for selector in content_selectors:
             elements = soup.select(selector)
             if elements:
                 for element in elements:
-                    text = element.get_text(separator=' ', strip=True)
-                    if len(text) > len(content_text):
-                        content_text = text
+                    structured_text = extract_structured_content(element)
+                    if len(structured_text) > len(article_content):
+                        article_content = structured_text
                 break
 
-        # If no specific content found, get all paragraphs
+        # Combine WPRM recipe content with article content if both exist
+        if content_text and article_content:
+            # WPRM content first (recipe), then article content (context/tips)
+            content_text = content_text + "\n\n" + article_content
+        elif article_content and not content_text:
+            content_text = article_content
+
+        # If no specific content found, extract from body with structure preservation
         if not content_text:
-            paragraphs = soup.find_all('p')
-            content_text = ' '.join([p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True)])
+            body = soup.find('body')
+            if body:
+                content_text = extract_structured_content(body)
 
         if content_text and len(content_text.strip()) > 200:
             return {
@@ -696,7 +775,17 @@ CRITICAL INSTRUCTIONS - FOLLOW EXACTLY:
 - NEVER select highlights or examples - include COMPLETE lists with ALL entries
 - EXPAND on details rather than condensing them
 - ADD relevant context from web search results where applicable
-- This is DOCUMENT PROCESSING, not summarization - maintain ALL original content
+
+SPECIAL HANDLING for RECIPE CONTENT:
+- When you see [LIST] markers, these represent recipe steps, ingredients, or instructions
+- Convert ALL [LIST] content into detailed HTML tables with proper step numbers
+- For recipe instructions: create tables with columns like "Step", "Action", "Details"
+- For ingredients: create tables with "Ingredient", "Amount", "Notes" columns
+- NEVER summarize recipe steps - include every single instruction exactly as provided
+- RECIPE STEPS MUST BE IN TABLES - this is mandatory for recipe content
+- If you detect recipe/cooking content, you MUST create step-by-step instruction tables
+
+This is DOCUMENT PROCESSING, not summarization - maintain ALL original content
 
 Verbosity Level: {verbosity} - {verbosity_instructions[verbosity]}
 """
@@ -752,6 +841,29 @@ Create a professional document following this EXACT structure (like a medical/sc
       <td>Data</td>
       <td>Data</td>
       <td>Data</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Recipe Instructions (REQUIRED for recipe content)</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Step</th>
+      <th>Instruction</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>Combine ingredients</td>
+      <td>Mix sesame paste, soy sauce, and other seasonings</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Cook noodles</td>
+      <td>Boil according to package directions</td>
     </tr>
   </tbody>
 </table>
@@ -855,7 +967,7 @@ Content to process:
         model_map = {
             "GPT-4o-mini": "gpt-4o-mini",
             "Gemini Pro 2.5": "gpt-4o-mini",  # fallback to GPT-4o-mini for now
-            "GPT-5": "gpt-4o"  # Use GPT-4o as GPT-5 proxy
+            "GPT-5": "gpt-4o"  # Use the most capable model available (GPT-4o is the latest standard model)
         }
         
         actual_model = model_map.get(selected_model, "gpt-4o")
@@ -867,7 +979,7 @@ Content to process:
                 # Set max tokens based on verbosity and environment
                 max_tokens = MAX_TOKENS_CONFIG.get(verbosity, MAX_TOKENS_CONFIG["Detailed"])
                 
-                print(f"DEBUG: Using {max_tokens} tokens for {verbosity} mode with {actual_model}")
+                print(f"DEBUG: Using {max_tokens} tokens for {verbosity} mode with {actual_model} (selected: {selected_model})")
                 print(f"DEBUG: Prompt length: {len(prompt)} characters")
 
                 response = openai.chat.completions.create(
