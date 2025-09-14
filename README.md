@@ -247,7 +247,7 @@ The system uses carefully crafted prompts to:
 #### WPRM (WP Recipe Maker) Detection
 - **Smart Container Detection**: Automatically identifies recipe sites using WP Recipe Maker plugin
 - **Structured Data Extraction**: Captures recipe steps, ingredients, and nutrition from structured containers
-- **Multi-Method Fallback**: newspaper3k + BeautifulSoup ensure comprehensive content extraction
+- **Priority Extraction Method**: BeautifulSoup with WPRM detection runs first, ensuring recipe structure is captured
 - **Content Prioritization**: Recipe data takes precedence over article content for focused processing
 
 #### AI Recipe Processing
@@ -255,6 +255,12 @@ The system uses carefully crafted prompts to:
 - **Template-Guided Output**: Concrete table examples (Step | Instruction | Details) ensure consistent formatting
 - **Content Preservation**: Never summarizes recipe steps - maintains every instruction exactly as provided
 - **Cross-Model Consistency**: Both Gemini Pro 2.5 and GPT-5 produce proper recipe step tables
+
+#### 🔧 **Recent Fix**: Extraction Method Reordering
+- **Problem Solved**: Recipe steps were missing because newspaper3k ran first and extracted plain text without structure markers
+- **Solution Applied**: Reordered extraction methods to prioritize BeautifulSoup with structured content detection
+- **Result**: All recipe sites now properly capture `[LIST]` markers for ingredients and instructions, enabling table generation
+- **Bonus**: Non-recipe articles with lists also benefit from enhanced structured extraction
 
 ### 🆕 AI-Powered Search & Citations System
 
@@ -358,8 +364,17 @@ Processes text input or research topics and returns structured HTML document.
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `OPENAI_API_KEY` | OpenAI API key for content processing | Yes |
+| `GOOGLE_API_KEY` | Google AI Studio API key for Gemini models | No |
 | `OPENAI_MODEL` | AI model to use (default: gpt-4o-mini) | Yes |
 | `BRAVE_API_KEY` | Future web search integration | No |
+
+### 🆕 Gemini API Setup (Optional)
+To use real Gemini Pro 2.5 instead of OpenAI fallbacks:
+1. Get a free API key from [Google AI Studio](https://aistudio.google.com/)
+2. Add `GOOGLE_API_KEY=your_key_here` or `GEMINI_API_KEY=your_key_here` to your `.env` file
+3. Gemini Pro 2.5 will automatically use `gemini-2.5-pro` model
+4. **Enhanced Error Handling**: Automatically falls back to GPT-4o if Gemini quota is exceeded or API fails
+5. Without the key, Gemini Pro 2.5 falls back to `gpt-4o`
 
 ## 🚀 Deployment
 

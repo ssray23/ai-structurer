@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import openai
+import google.generativeai as genai
 import os
 import requests
 import json
@@ -16,6 +17,14 @@ config = get_config()
 openai.api_key = config.OPENAI_API_KEY
 if not openai.api_key:
     raise ValueError("Please set your OPENAI_API_KEY environment variable.")
+
+# Configure Gemini API (optional)
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY') or os.getenv('GEMINI_API_KEY')
+if GOOGLE_API_KEY:
+    genai.configure(api_key=GOOGLE_API_KEY)
+    print("INFO: Gemini API configured")
+else:
+    print("INFO: GOOGLE_API_KEY/GEMINI_API_KEY not found - Gemini will fallback to OpenAI models")
 
 # Global configuration variables
 API_TIMEOUT = config.API_TIMEOUT
@@ -128,7 +137,74 @@ def extract_structured_content(element):
 def extract_article_content(url):
     """Extract article content from URL using multiple methods"""
     try:
-        # Method 1: Try newspaper3k first (best for news articles)
+        # Method 1: Try BeautifulSoup with WPRM detection first (best for recipes and structured content)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        # Remove script and style elements
+        for script in soup(["script", "style", "nav", "footer", "header", "aside"]):
+            script.decompose()
+
+        # Try to find main content areas (enhanced for recipe sites)
+        content_selectors = [
+            'article', 'main', '.content', '.post-content', '.entry-content',
+            '.article-content', '.post-body', '.story-body', '.article-body'
+        ]
+
+        # Check for WPRM recipe content first (priority for recipe sites)
+        wprm_recipe = soup.find('div', class_=lambda x: x and 'wp-recipe-maker' in str(x))
+        content_text = ""
+
+        if wprm_recipe:
+            print("DEBUG: Found WPRM recipe container")
+            wprm_content = extract_structured_content(wprm_recipe)
+            if len(wprm_content) > 500:  # Substantial recipe content
+                content_text = wprm_content
+
+        # Extract title
+        title_tag = soup.find('title')
+        title = title_tag.get_text().strip() if title_tag else "Web Article"
+
+        # Try to find content using selectors with enhanced structured extraction
+        article_content = ""
+        for selector in content_selectors:
+            elements = soup.select(selector)
+            if elements:
+                for element in elements:
+                    structured_text = extract_structured_content(element)
+                    if len(structured_text) > len(article_content):
+                        article_content = structured_text
+                break
+
+        # Combine WPRM recipe content with article content if both exist
+        if content_text and article_content:
+            # WPRM content first (recipe), then article content (context/tips)
+            content_text = content_text + "\n\n" + article_content
+        elif article_content and not content_text:
+            content_text = article_content
+
+        # If no specific content found, extract from body with structure preservation
+        if not content_text:
+            body = soup.find('body')
+            if body:
+                content_text = extract_structured_content(body)
+
+        if content_text and len(content_text.strip()) > 200:
+            return {
+                'title': title or 'Web Article',
+                'text': content_text.strip(),
+                'author': [],
+                'publish_date': None,
+                'method': 'beautifulsoup'
+            }
+
+        # Method 2: Fallback to newspaper3k for news articles
         try:
             article = Article(url)
             article.download()
@@ -145,7 +221,7 @@ def extract_article_content(url):
         except Exception as e:
             print(f"Newspaper3k extraction failed: {e}")
 
-        # Method 2: Fallback to BeautifulSoup for general web content
+        # Method 3: Final fallback to basic BeautifulSoup
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
@@ -665,11 +741,12 @@ Query:"""
         return create_fallback_query()
 
 def calculate_cost(model_name, prompt_tokens, completion_tokens):
-    """Calculate cost based on model pricing (as of 2024)"""
+    """Calculate cost based on model pricing (as of 2025)"""
     pricing = {
         "GPT-4o-mini": {"input": 0.00015, "output": 0.0006},  # per 1k tokens
-        "Gemini Pro 2.5": {"input": 0.000125, "output": 0.000375},  # estimated
-        "GPT-5": {"input": 0.005, "output": 0.015}  # estimated premium pricing
+        "Gemini Pro 2.5": {"input": 0.0025, "output": 0.01},  # Gemini 2.5 Pro pricing (estimated)
+        "GPT-5": {"input": 0.005, "output": 0.015},  # estimated premium pricing
+        "gemini-2.5-pro": {"input": 0.0025, "output": 0.01},  # Direct Gemini Pro pricing
     }
     
     if model_name not in pricing:
@@ -963,11 +1040,15 @@ Content to process:
     """
 
     try:
+        # Check for Gemini API key dynamically
+        gemini_api_key = os.getenv('GOOGLE_API_KEY') or os.getenv('GEMINI_API_KEY')
+        print(f"DEBUG: Gemini API key available: {bool(gemini_api_key)}")
+
         # Map model names to actual model IDs
         model_map = {
             "GPT-4o-mini": "gpt-4o-mini",
-            "Gemini Pro 2.5": "gpt-4o-mini",  # fallback to GPT-4o-mini for now
-            "GPT-5": "gpt-4o"  # Use the most capable model available (GPT-4o is the latest standard model)
+            "Gemini Pro 2.5": "gemini-2.5-pro" if gemini_api_key else "gpt-4o",  # Use actual Gemini Pro if available
+            "GPT-5": "gpt-4o"  # Use GPT-4o as GPT-5 proxy (GPT-5 may require special access)
         }
         
         actual_model = model_map.get(selected_model, "gpt-4o")
@@ -982,15 +1063,49 @@ Content to process:
                 print(f"DEBUG: Using {max_tokens} tokens for {verbosity} mode with {actual_model} (selected: {selected_model})")
                 print(f"DEBUG: Prompt length: {len(prompt)} characters")
 
-                response = openai.chat.completions.create(
-                    model=actual_model,
-                    messages=[
-                        {"role": "system", "content": "You are an expert document analyst and professional HTML formatter. Create highly structured, intelligent documents with deep analysis."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    max_tokens=max_tokens,
-                    timeout=API_TIMEOUT
-                )
+                # Use Gemini API for Gemini models, OpenAI API for others
+                if actual_model.startswith("gemini-"):
+                    print("DEBUG: Using Gemini API...")
+                    try:
+                        model = genai.GenerativeModel(actual_model)
+                        full_prompt = "You are an expert document analyst and professional HTML formatter. Create highly structured, intelligent documents with deep analysis.\n\n" + prompt
+                        gemini_response = model.generate_content(
+                            full_prompt,
+                            generation_config=genai.types.GenerationConfig(
+                                max_output_tokens=max_tokens,
+                            )
+                        )
+
+                        # Convert Gemini response to OpenAI-like format
+                        class MockResponse:
+                            def __init__(self, text):
+                                self.choices = [type('obj', (object,), {'message': type('obj', (object,), {'content': text})()})]
+                                self.usage = type('obj', (object,), {'total_tokens': len(text.split()), 'prompt_tokens': len(prompt.split()), 'completion_tokens': len(text.split())})()
+
+                        response = MockResponse(gemini_response.text)
+                        print("DEBUG: Gemini API call successful!")
+                    except Exception as e:
+                        print(f"DEBUG: Gemini API failed ({str(e)}), falling back to OpenAI GPT-4o")
+                        actual_model = "gpt-4o"  # Fallback to GPT-4o
+                        response = openai.chat.completions.create(
+                            model=actual_model,
+                            messages=[
+                                {"role": "system", "content": "You are an expert document analyst and professional HTML formatter. Create highly structured, intelligent documents with deep analysis."},
+                                {"role": "user", "content": prompt}
+                            ],
+                            max_tokens=max_tokens,
+                            temperature=0.7
+                        )
+                else:
+                    response = openai.chat.completions.create(
+                        model=actual_model,
+                        messages=[
+                            {"role": "system", "content": "You are an expert document analyst and professional HTML formatter. Create highly structured, intelligent documents with deep analysis."},
+                            {"role": "user", "content": prompt}
+                        ],
+                        max_tokens=max_tokens,
+                        timeout=API_TIMEOUT
+                    )
 
                 print(f"DEBUG: Response tokens used: {response.usage.total_tokens if response.usage else 'Unknown'}")
                 print(f"DEBUG: Output length: {len(response.choices[0].message.content)} characters")
