@@ -1,0 +1,123 @@
+==> Available at your primary URL https://ai-structurer.onrender.com
+     ==> 
+     ==> ///////////////////////////////////////////////////////////
+127.0.0.1 - - [12/Sep/2025:15:45:28 +0000] "GET / HTTP/1.1" 200 23168 "-" "Go-http-client/2.0"
+127.0.0.1 - - [12/Sep/2025:15:45:46 +0000] "GET / HTTP/1.1" 200 23168 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
+[2025-09-12 15:46:25 +0000] [56] [INFO] Handling signal: term
+[2025-09-12 15:46:25 +0000] [60] [INFO] Worker exiting (pid: 60)
+INFO: RENDER env var = true
+INFO: ENVIRONMENT env var = NOT_SET
+INFO: Running in production mode
+INFO: API timeout set to 60s, max retries: 3
+INFO: Token limits - Concise: 2000, Detailed: 3500, Comprehensive: 4500
+[2025-09-12 15:46:27 +0000] [56] [INFO] Shutting down: Master
+INFO: RENDER env var = true
+INFO: ENVIRONMENT env var = NOT_SET
+INFO: Running in production mode
+INFO: API timeout set to 60s, max retries: 3
+INFO: Token limits - Concise: 2000, Detailed: 3500, Comprehensive: 4500
+[2025-09-12 15:46:49 +0000] [56] [CRITICAL] WORKER TIMEOUT (pid:58)
+[2025-09-12 15:46:49 +0000] [58] [ERROR] Error handling request /api/process
+Traceback (most recent call last):
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/workers/sync.py", line 134, in handle
+    self.handle_request(listener, req, client, addr)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/workers/sync.py", line 177, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/opt/render/project/src/server.py", line 626, in process
+    response = openai.chat.completions.create(
+        model=actual_model,
+    ...<5 lines>...
+        timeout=API_TIMEOUT
+    )
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/openai/_utils/_utils.py", line 286, in wrapper
+    return func(*args, **kwargs)
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/openai/resources/chat/completions/completions.py", line 1147, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<46 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/openai/_base_client.py", line 1259, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/openai/_base_client.py", line 982, in request
+    response = self._client.send(
+        request,
+        stream=stream or self._should_stream_response_body(request=request),
+        **kwargs,
+    )
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/httpx/_client.py", line 914, in send
+    response = self._send_handling_auth(
+        request,
+    ...<2 lines>...
+        history=[],
+    )
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/httpx/_client.py", line 942, in _send_handling_auth
+    response = self._send_handling_redirects(
+DEBUG: AI detected theme: default for content: history of italy from 1900 to 1950...
+        request,
+        follow_redirects=follow_redirects,
+        history=history,
+DEBUG: Processing mode: AI Research
+DEBUG: Detected theme: default, color: #6c757d
+DEBUG: Selected model: GPT-5, Verbosity: Comprehensive
+DEBUG: AI Research - Found 5 web search results
+127.0.0.1 - - [12/Sep/2025:15:46:49 +0000] "POST /api/process HTTP/1.1" 500 0 "-" "-"
+    )
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/httpx/_client.py", line 979, in _send_handling_redirects
+    response = self._send_single_request(request)
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/httpx/_client.py", line 1014, in _send_single_request
+    response = transport.handle_request(request)
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/httpx/_transports/default.py", line 250, in handle_request
+    resp = self._pool.handle_request(req)
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/httpcore/_sync/connection_pool.py", line 256, in handle_request
+    raise exc from None
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/httpcore/_sync/connection_pool.py", line 236, in handle_request
+    response = connection.handle_request(
+        pool_request.request
+    )
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/httpcore/_sync/connection.py", line 103, in handle_request
+    return self._connection.handle_request(request)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/httpcore/_sync/http11.py", line 136, in handle_request
+    raise exc
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/httpcore/_sync/http11.py", line 106, in handle_request
+    ) = self._receive_response_headers(**kwargs)
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/httpcore/_sync/http11.py", line 177, in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/httpcore/_sync/http11.py", line 217, in _receive_event
+    data = self._network_stream.read(
+        self.READ_NUM_BYTES, timeout=timeout
+    )
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/httpcore/_backends/sync.py", line 128, in read
+    return self._sock.recv(max_bytes)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/ssl.py", line 1285, in recv
+    return self.read(buflen)
+           ~~~~~~~~~^^^^^^^^
+  File "/usr/local/lib/python3.13/ssl.py", line 1140, in read
+    return self._sslobj.read(len)
+           ~~~~~~~~~~~~~~~~~^^^^^
+  File "/opt/render/project/src/.venv/lib/python3.13/site-packages/gunicorn/workers/base.py", line 204, in handle_abort
+    sys.exit(1)
+    ~~~~~~~~^^^
+SystemExit: 1
+[2025-09-12 15:46:49 +0000] [58] [INFO] Worker exiting (pid: 58)
+[2025-09-12 15:46:50 +0000] [56] [ERROR] Worker (pid:58) was sent SIGKILL! Perhaps out of memory?
+[2025-09-12 15:46:50 +0000] [60] [INFO] Booting worker with pid: 60
