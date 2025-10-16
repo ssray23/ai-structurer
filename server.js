@@ -712,6 +712,29 @@ Query:`;
 }
 
 /**
+ * Get currency exchange rates from Frankfurter API (free, no API key required)
+ */
+async function getExchangeRates() {
+  try {
+    const response = await axios.get('https://api.frankfurter.app/latest?from=USD', {
+      timeout: 3000
+    });
+
+    if (response.status === 200 && response.data.rates) {
+      return response.data.rates;
+    }
+  } catch (error) {
+    console.log(`Exchange rate fetch error: ${error.message}`);
+  }
+
+  // Fallback approximate rates if API fails (as of 2025)
+  return {
+    GBP: 0.79,   // British Pound
+    INR: 83.50   // Indian Rupee
+  };
+}
+
+/**
  * Calculate cost based on model pricing (as of 2025)
  */
 function calculateCost(modelName, promptTokens, completionTokens) {
@@ -727,6 +750,19 @@ function calculateCost(modelName, promptTokens, completionTokens) {
   const outputCost = (completionTokens / 1000) * model.output;
 
   return inputCost + outputCost;
+}
+
+/**
+ * Convert USD cost to GBP and INR
+ */
+async function convertCost(usdCost) {
+  const rates = await getExchangeRates();
+
+  return {
+    USD: usdCost,
+    GBP: usdCost * rates.GBP,
+    INR: usdCost * rates.INR
+  };
 }
 
 // Routes
@@ -906,7 +942,7 @@ Create a professional document following this EXACT structure (like a medical/sc
   </tbody>
 </table>
 
-<h2>Recipe Instructions (REQUIRED for recipe content)</h2>
+${theme === 'food' ? `<h2>Recipe Instructions (REQUIRED for recipe content)</h2>
 <table>
   <thead>
     <tr>
@@ -928,7 +964,7 @@ Create a professional document following this EXACT structure (like a medical/sc
     </tr>
   </tbody>
 </table>
-
+` : ''}
 <h2>Summary</h2>
 <ul>
   <li>Key point 1</li>
@@ -1115,13 +1151,14 @@ ${processingContent}
     const completionTokens = tokenUsage.completion_tokens;
     const totalTokens = tokenUsage.total_tokens;
 
-    // Calculate cost
-    const cost = calculateCost(selectedModel, promptTokens, completionTokens);
+    // Calculate cost and convert to multiple currencies
+    const costUSD = calculateCost(selectedModel, promptTokens, completionTokens);
+    const costInCurrencies = await convertCost(costUSD);
 
     console.log(`DEBUG: AI response length: ${aiHtml.length}`);
     console.log(`DEBUG: AI response starts with: ${aiHtml.substring(0, 100)}`);
     console.log(`DEBUG: Token usage - Prompt: ${promptTokens}, Completion: ${completionTokens}, Total: ${totalTokens}`);
-    console.log(`DEBUG: Estimated cost: $${cost.toFixed(4)}`);
+    console.log(`DEBUG: Estimated cost: $${costUSD.toFixed(4)} USD`);
 
     // Clean up any markdown formatting that might have slipped through
     if (aiHtml.startsWith('```html')) {
@@ -1173,7 +1210,8 @@ ${aiHtml}
         completion: completionTokens,
         total: totalTokens
       },
-      cost: cost,
+      cost: costUSD,
+      costInCurrencies: costInCurrencies,
       model: selectedModel,
       theme: theme,
       theme_color: themeColor
