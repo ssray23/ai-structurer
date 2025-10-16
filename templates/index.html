@@ -701,12 +701,21 @@ document.getElementById("process-btn").addEventListener("click", async () => {
             if(data.tokens && data.cost) {
                 const existingStats = document.getElementById("processing-stats");
                 if(existingStats) existingStats.remove();
-                
+
+                // Use multi-currency costs if available, otherwise fall back to USD only
+                let costDisplay = '';
+                if (data.costInCurrencies) {
+                    const currencies = data.costInCurrencies;
+                    costDisplay = `Cost: $${currencies.USD.toFixed(4)} | £${currencies.GBP.toFixed(4)} | ₹${currencies.INR.toFixed(2)}`;
+                } else {
+                    costDisplay = `Cost: $${data.cost.toFixed(4)} USD`;
+                }
+
                 const statsDiv = document.createElement("div");
                 statsDiv.id = "processing-stats";
                 statsDiv.style.cssText = "margin-top: 15px; padding: 12px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; font-size: 12px; color: #495057;";
-                statsDiv.innerHTML = `<strong>📊 Processing Stats:</strong><br>Model: ${data.model} | Tokens: ${data.tokens.total} (${data.tokens.prompt} prompt + ${data.tokens.completion} completion) | Cost: $${data.cost.toFixed(4)}`;
-                
+                statsDiv.innerHTML = `<strong>📊 Processing Stats:</strong><br>Model: ${data.model} | Tokens: ${data.tokens.total} (${data.tokens.prompt} prompt + ${data.tokens.completion} completion)<br>${costDisplay}`;
+
                 document.getElementById("theme-display").appendChild(statsDiv);
             }
             
