@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo   AI Document Structurer - Node.js
+echo   AI Document Structurer - Python
 echo ========================================
 echo.
 echo Starting server at: http://localhost:5000
@@ -8,8 +8,8 @@ echo.
 echo *** CLOSE THIS WINDOW TO STOP THE SERVER ***
 echo.
 
-REM Start the Node.js server in background and wait for it to be ready
-start /B node server.js
+REM Start the Flask server in background and wait for it to be ready
+start /B python server.py
 
 REM Wait for server to be ready by checking if port 5000 is listening
 echo Waiting for server to start...
